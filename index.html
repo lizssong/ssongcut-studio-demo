@@ -268,7 +268,7 @@ textarea.inp{height:auto;min-height:62px;padding:10px 12px;resize:vertical;line-
 <nav class="nav"><div class="wrap">
   <a class="logo" href="#" id="homeLink"><span class="logo-mark"><svg viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z" fill="#fff"/></svg></span>쏭컷 AI<small>STUDIO</small></a>
   <div class="nav-links"><a href="#features">기능</a><a href="#how">사용 방법</a><a href="#faq">자주 묻는 질문</a></div>
-  <div class="nav-cta"><span class="badge">BETA</span><button class="btn btn-primary btn-sm" id="navUpload">영상 올리기</button></div>
+  <div class="nav-cta"><div class="acct" id="acct"></div><span class="badge">BETA</span><button class="btn btn-primary btn-sm" id="navUpload">영상 올리기</button></div>
 </div></nav>
 
 <!-- ============ LANDING ============ -->
@@ -277,7 +277,7 @@ textarea.inp{height:auto;min-height:62px;padding:10px 12px;resize:vertical;line-
     <div class="eyebrow"><b>AI AUTO</b>업로드 한 번이면 요약 · 하이라이트 · 자막까지</div>
     <h1>긴 영상 하나만 올리세요.<br><span class="grad">숏츠는 AI가 자막까지</span> 완성합니다.</h1>
     <p class="lead">강의·라이브·인터뷰 영상을 AI가 끝까지 듣고 이야기를 요약한 뒤, 가장 반응이 좋을 장면만 골라 9:16 숏츠로 만들어요. 자막은 말하는 타이밍에 맞춰 자동으로 입혀집니다.</p>
-    <div class="trust"><span><i>✓</i>회원가입 없이 무료</span><span><i>✓</i>영상 원본은 업로드하지 않음</span><span><i>✓</i>1080×1920 MP4 바로 저장</span></div>
+    <div class="trust"><span><i>✓</i>구글 로그인 · 첫 1회 무료</span><span><i>✓</i>영상 원본은 업로드하지 않음</span><span><i>✓</i>1080×1920 MP4 바로 저장</span></div>
 
     <div class="studio" id="studio"><div class="studio-inner">
       <div class="drop" id="drop" tabindex="0" role="button" aria-label="영상 파일 선택">
@@ -330,14 +330,16 @@ textarea.inp{height:auto;min-height:62px;padding:10px 12px;resize:vertical;line-
       <div class="stp"><b>STEP 03</b><h4>확인하고 저장</h4><p>마음에 드는 숏츠는 바로 MP4로. 고치고 싶을 때만 자막과 구간을 손보세요.</p></div>
     </div>
     <div class="faq" id="faq">
-      <details><summary>정말 하나하나 편집 안 해도 되나요?</summary><p>네. 영상을 올리고 버튼 한 번만 누르면 요약, 장면 선택, 자막, 세로 화면 구성까지 끝난 숏츠가 여러 편 나옵니다. 오타나 구간이 마음에 들지 않을 때만 편집 화면에서 고치면 돼요.</p></details>
+      <details id="pricing"><summary>요금은 어떻게 되나요?</summary><p>구글 계정으로 로그인하면 <b>첫 1회는 무료</b>예요. 이후에는 <b>30일 이용권 9,900원</b>(자동 결제 아님, 1회 결제)으로 기간 안에 횟수 제한 없이 숏츠를 만들 수 있어요. Gemini 엔진은 본인 Gemini 키(무료 등급 가능)로 동작하고, ‘내 PC · 키 없이’ 엔진은 키 없이 쓸 수 있어요.</p></details>
+<details id="terms"><summary>이용약관 · 환불 안내</summary><p>· 상품: 쏭컷 AI 이용권 30일(9,900원, 부가세 포함). 결제 시점부터 30일 동안 숏츠 생성·MP4 저장을 횟수 제한 없이 이용할 수 있어요. 자동 결제(정기 결제)는 없습니다.<br>· 환불: 결제 후 7일 이내이고 이용권으로 숏츠를 만들지 않았다면 전액 환불해 드려요. 이용권으로 숏츠를 만든 뒤에는 디지털 콘텐츠 특성상 환불이 제한될 수 있어요. 환불 문의는 mkssong22@gmail.com 으로 보내 주세요.<br>· 영상 원본은 서버로 업로드하지 않으며, 저작권이 있거나 사용 권한이 없는 영상은 이용할 수 없어요.<br>· 로그인 시 이메일과 이용 기록(무료 사용 여부, 이용권 기간, 결제 번호)을 이용권 관리 목적으로 보관해요. 결제는 토스페이먼츠를 통해 처리되며 카드 정보는 쏭컷에 저장되지 않아요. <a href="https://withaisolution.co.kr/privacy/" target="_blank" rel="noopener" style="color:#c4b5fd">개인정보처리방침</a></p></details>
+<details><summary>정말 하나하나 편집 안 해도 되나요?</summary><p>네. 영상을 올리고 버튼 한 번만 누르면 요약, 장면 선택, 자막, 세로 화면 구성까지 끝난 숏츠가 여러 편 나옵니다. 오타나 구간이 마음에 들지 않을 때만 편집 화면에서 고치면 돼요.</p></details>
       <details><summary>영상이 외부 서버로 올라가나요?</summary><p>영상 원본은 어디에도 올라가지 않고, 자르기·자막 입히기·저장은 모두 내 브라우저 안에서 처리돼요. Gemini 엔진을 쓰면 받아쓰기와 요약을 위해 <b>소리(음성)만</b> 내 Gemini 키로 Google에 보내요. 아무것도 보내고 싶지 않다면 ‘내 PC · 키 없이’ 엔진을 고르세요.</p></details>
       <details><summary>어떤 영상이 잘 되나요?</summary><p>말소리가 또렷한 강의, 강연, 인터뷰, 라이브, 리뷰 영상이 가장 좋아요. 배경음악만 있는 영상은 자막과 요약을 만들기 어렵습니다. PC 크롬·엣지에서 60분 이하 영상을 권장해요.</p></details>
       <details><summary>Gemini 키는 어떻게 받나요? 돈이 드나요?</summary><p>Google AI Studio(aistudio.google.com)에 구글 계정으로 들어가 ‘API 키 만들기’를 누르면 바로 받을 수 있어요. 무료 등급 한도 안에서는 비용이 들지 않아요. 단, 무료 등급 데이터는 Google 서비스 개선에 쓰일 수 있으니 민감한 영상은 ‘내 PC’ 엔진을 권해요.</p></details>
       <details><summary>‘내 PC · 키 없이’ 엔진은 왜 느린가요?</summary><p>AI 음성 인식 모델을 내 컴퓨터 그래픽카드로 직접 돌리기 때문이에요. 첫 실행 때 모델을 한 번 내려받고, PC 성능에 따라 영상 길이만큼 걸릴 수 있어요.</p></details>
     </div>
   </div></section>
-  <footer><div class="wrap"><div>© 2026 위드AI솔루션 · 쏭컷 AI STUDIO BETA<br>기획·운영 송민경(쏭리즈) · 내가 만들었거나 사용 권한이 있는 영상만 이용해 주세요.</div><div><a href="https://litt.ly/ssongliz" target="_blank" rel="noopener">문의 · litt.ly/ssongliz ↗</a></div></div></footer>
+  <footer><div class="wrap"><div>© 2026 위드AI솔루션 · 쏭컷 AI STUDIO BETA<br>상호 위드AI솔루션 · 대표 송민경(쏭리즈) · 문의 mkssong22@gmail.com · <a href="#terms">이용약관·환불</a><br>내가 만들었거나 사용 권한이 있는 영상만 이용해 주세요.</div><div><a href="https://litt.ly/ssongliz" target="_blank" rel="noopener">문의 · litt.ly/ssongliz ↗</a></div></div></footer>
 </main>
 
 <!-- ============ PROCESS ============ -->
@@ -408,7 +410,7 @@ textarea.inp{height:auto;min-height:62px;padding:10px 12px;resize:vertical;line-
     </div>
     <div class="row2">
       <div class="fld"><label>강조 색</label><div class="colors" id="edColors"></div></div>
-      <div class="fld"><label>내 채널 표시</label><input class="inp" id="edBrand" placeholder="@ssongliz"></div>
+      <div class="fld"><label>내 채널 표시</label><input class="inp" id="edBrand" placeholder="@내채널 (비우면 표시 안 함)"></div>
     </div>
     <div class="fld" id="cropFld"><label>꽉 채우기 위치 (인물 위치에 맞춰 좌우 이동)</label><input type="range" id="edCrop" min="0" max="100" value="50" style="width:100%;accent-color:#a78bfa"></div>
     <div class="fld"><label>자막 고치기 <span style="font-weight:500">· 틀린 글자만 바로 수정하세요</span></label><div class="caps" id="edCaps"></div></div>
@@ -458,7 +460,7 @@ const LENS = { short: [15, 30, 24], mid: [30, 60, 45], long: [60, 90, 75] };
 const S = {
   file: null, url: null, dur: 0, vw: 0, vh: 0,
   opts: { len: 'mid', layout: 'blur', preset: 'impact', engine: 'gemini' }, env: null,
-  style: { layout: 'blur', preset: 'impact', accent: '#FFE14D', brand: '@ssongliz', cropX: 0.5 },
+  style: { layout: 'blur', preset: 'impact', accent: '#FFE14D', brand: (localStorage.getItem('ssongcut.brand') || ''), cropX: 0.5 },
   words: [], sents: [], analysis: null, shorts: [], cancel: false, worker: null, workerModel: null, busyExport: false,
 };
 
@@ -552,6 +554,8 @@ async function runPipeline() {
   const key = useGem ? $('#gKey').value.trim() : '';
   if (useGem && !key) { keyMsg('Gemini 키를 붙여넣거나, 위에서 ‘내 PC · 키 없이’를 골라 주세요.', 'kb-bad'); $('#gKey').focus(); return; }
   if (key) { try { localStorage.setItem('ssongcut.gkey', key); } catch (_) {} }
+  if (!window.SCPay) { toast('로그인 기능을 불러오는 중이에요. 잠시 후 다시 눌러 주세요.'); return; }
+  if (!(await window.SCPay.gate())) return;
   S.cancel = false;
   show('vProc');
   $('#pErr').classList.add('hidden'); $('#feed').innerHTML = ''; $$('#slist li').forEach((li, i) => { li.className = ''; $('.ic', li).textContent = i + 1; $('.st', li).textContent = ''; });
@@ -600,6 +604,7 @@ async function runPipeline() {
     S.shorts = analysis.shorts.map((x, i) => makeShort(x, i));
     await prepareVideos();
     renderResults();
+    try { window.SCPay && window.SCPay.consume(); } catch (_) {}
     await renderThumbs((f) => prog('make', f));
     stepState('make', 'done');
     pvid.pause();
@@ -1067,7 +1072,7 @@ function edRefresh(thumbsAll) { if (!ED) return; edTimes(); loadFonts(ED).then(e
 $('#edPlay').addEventListener('click', async () => { if (!vPrev.paused) { vPrev.pause(); setPlayIcon(false); return; } if (vPrev.currentTime >= ED.e - 0.1 || vPrev.currentTime < ED.s) await seek(vPrev, ED.s); await loadFonts(ED); vPrev.play(); setPlayIcon(true); cancelAnimationFrame(edRaf); edLoop(); });
 $('#edSeek').addEventListener('input', async (e) => { const t = ED.s + (ED.e - ED.s) * e.target.value / 1000; await seek(vPrev, t); edDraw(); });
 $('#edTitle').addEventListener('input', (e) => { ED.title = e.target.value; loadFonts(ED).then(edDraw); });
-$('#edBrand').addEventListener('input', (e) => { S.style.brand = e.target.value; S._dirtyAll = true; edDraw(); });
+$('#edBrand').addEventListener('input', (e) => { S.style.brand = e.target.value; try { localStorage.setItem('ssongcut.brand', e.target.value); } catch (_) {} S._dirtyAll = true; edDraw(); });
 $('#edCrop').addEventListener('input', (e) => { S.style.cropX = e.target.value / 100; S._dirtyAll = true; edDraw(); });
 $('#edColors').addEventListener('click', (e) => { const b = e.target.closest('[data-c]'); if (!b) return; S.style.accent = b.dataset.c; S._dirtyAll = true; $$('#edColors button').forEach(x => x.classList.toggle('on', x === b)); edDraw(); });
 $('#edCaps').addEventListener('input', (e) => { const i = e.target.dataset.ci; if (i == null) return; const c = ED.caps[+i]; c.text = e.target.value; c.edited = true; edDraw(); });
@@ -1249,5 +1254,172 @@ syncSegs(); syncEngine();
 window.__ssongcut = S; window.__ssongcutRender = renderShort;
 })();
 </script>
+
+<!-- SSONGCUT_PAY_BEGIN -->
+<style>
+.acct{display:flex;align-items:center;gap:8px}
+.acct .who{font-size:12.5px;color:var(--muted);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct .lo{font-size:12px;color:var(--dim);text-decoration:underline;cursor:pointer}
+.plan{font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:rgba(52,211,153,.12);color:var(--ok);border:1px solid rgba(52,211,153,.3);white-space:nowrap;cursor:pointer}
+.plan.free{background:rgba(255,255,255,.06);color:var(--muted);border-color:var(--line2)}
+.plan.end{background:rgba(248,113,113,.1);color:var(--err);border-color:rgba(248,113,113,.3)}
+@media (max-width:720px){.acct .who,.acct .lo{display:none}}
+.pw-back{position:fixed;inset:0;z-index:90;background:rgba(4,4,8,.74);backdrop-filter:blur(6px);display:grid;place-items:center;padding:20px}
+.pw{width:min(440px,100%);background:var(--panel);border:1px solid var(--line2);border-radius:22px;padding:28px;box-shadow:0 30px 80px -20px rgba(0,0,0,.7);position:relative;max-height:92vh;overflow:auto}
+.pw .eb{font-size:11px;font-weight:800;letter-spacing:.12em;color:#c4b5fd}
+.pw h3{font-size:22px;letter-spacing:-.02em;margin:6px 0 8px;line-height:1.35}
+.pw p{color:var(--muted);font-size:14.5px}
+.pw .price{display:flex;align-items:baseline;gap:8px;margin:18px 0 4px}
+.pw .price b{font-size:34px;letter-spacing:-.03em}
+.pw .price span{color:var(--muted);font-size:14px}
+.pw ul{list-style:none;margin:12px 0 14px;display:grid;gap:6px;font-size:14px}
+.pw li:before{content:"✓ ";color:var(--ok);font-weight:800}
+.pw .agree{display:flex;gap:8px;font-size:12.5px;color:var(--muted);margin:6px 0 14px;align-items:flex-start;line-height:1.5}
+.pw .agree input{margin-top:3px}
+.pw .agree a{color:#c4b5fd}
+.pw .x{position:absolute;top:12px;right:16px;font-size:24px;color:var(--muted)}
+.pw .btn{width:100%}
+.pw .gbtn{background:#fff;color:#111}
+.pw .gbtn i{font-style:normal;font-weight:900;color:#4285f4;margin-right:4px}
+.pw .note{font-size:12px;color:var(--dim);margin-top:12px;line-height:1.55}
+.pw .err{color:var(--err);font-size:13px;margin-top:10px}
+</style>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const PAY = {
+  price: 9900, days: 30, orderName: '쏭컷 AI 이용권 30일',
+  backend: 'https://script.google.com/macros/s/AKfycbxsUt-AKMf2fw4w4Kqch2rjkq2nXe8ARTGWHHvnEP3zjwdc1M20Z8DDJCy1L1fs7WhAFA/exec',
+  tossClientKey: '',            // 토스페이먼츠 클라이언트 키 (test_ck_… 는 운영자만 결제 가능, live_ck_… 는 모두)
+  owner: 'mkssong22@gmail.com', contact: 'mkssong22@gmail.com'
+};
+const app = initializeApp({ apiKey: 'AIzaSyD546oVux_RkRnwVAuDhguT-5YPACgn5Hs', authDomain: 'lizssong.github.io', projectId: 'withaisolution', storageBucket: 'withaisolution.firebasestorage.app', messagingSenderId: '372739314135', appId: '1:372739314135:web:43254c2f8bdc5be163fb92' }, 'ssongcut');
+const auth = getAuth(app); auth.languageCode = 'ko';
+const db = getFirestore(app);
+let user = null, ent = null, authReady;
+const authReadyP = new Promise(r => authReady = r);
+const $q = s => document.querySelector(s);
+const esc = s => String(s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const say = m => (window.toast ? window.toast(m, 3800) : alert(m));
+const ymd = d => (d.getMonth() + 1) + '/' + d.getDate();
+const isPaid = () => !!(ent && ent.paidUntil && ent.paidUntil > new Date());
+const payReady = () => !!PAY.tossClientKey && (!PAY.tossClientKey.startsWith('test_') || (user && user.email === PAY.owner));
+
+async function loadEnt() {
+  if (!user) { ent = null; return; }
+  const ref = doc(db, 'ssongcut_users', user.uid);
+  let s = await getDoc(ref);
+  if (!s.exists()) { await setDoc(ref, { email: user.email || '', freeUsed: 0, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }); s = await getDoc(ref); }
+  const d = s.data() || {};
+  ent = { freeUsed: d.freeUsed || 0, paidUntil: d.paidUntil && d.paidUntil.toDate ? d.paidUntil.toDate() : null };
+}
+function renderAcct() {
+  const el = $q('#acct'); if (!el) return;
+  if (!user) { el.innerHTML = '<button class="btn btn-ghost btn-sm" id="acLogin">로그인</button>'; $q('#acLogin').onclick = () => openLogin(); return; }
+  let badge = '';
+  if (ent) {
+    if (isPaid()) badge = '<span class="plan" id="acPlan">이용권 ~' + ymd(ent.paidUntil) + '</span>';
+    else if ((ent.freeUsed || 0) < 1) badge = '<span class="plan free" id="acPlan">무료 1회 남음</span>';
+    else badge = '<span class="plan end" id="acPlan">이용권 구매</span>';
+  }
+  el.innerHTML = badge + '<span class="who" title="' + esc(user.email) + '">' + esc(user.email) + '</span><span class="lo" id="acOut">로그아웃</span>';
+  const p = $q('#acPlan'); if (p) p.onclick = () => openPaywall();
+  $q('#acOut').onclick = () => signOut(auth);
+}
+function modal(html) {
+  const b = document.createElement('div'); b.className = 'pw-back';
+  b.innerHTML = '<div class="pw" role="dialog" aria-modal="true"><button class="x" aria-label="닫기">×</button>' + html + '</div>';
+  document.body.appendChild(b);
+  const close = () => b.remove();
+  b.querySelector('.x').addEventListener('click', close); b.addEventListener('click', e => { if (e.target === b) close(); });
+  return { el: b, close };
+}
+async function login() {
+  const cred = await signInWithPopup(auth, new GoogleAuthProvider());
+  user = cred.user; await loadEnt(); renderAcct(); return true;
+}
+function openLogin() {
+  return new Promise(resolve => {
+    const m = modal('<span class="eb">FREE TRIAL</span><h3>구글 계정으로 시작하면<br>첫 1회는 무료예요</h3><p>로그인은 무료 체험과 이용권 기간을 확인하는 데만 써요. 비밀번호를 따로 만들 필요가 없어요.</p><div style="height:16px"></div><button class="btn gbtn" id="pwG"><i>G</i>구글 계정으로 계속하기</button><p class="note">계속하면 <a href="#terms" class="pwLink" style="color:#c4b5fd">이용약관</a>과 <a href="https://withaisolution.co.kr/privacy/" target="_blank" rel="noopener" style="color:#c4b5fd">개인정보처리방침</a>에 동의하게 돼요. 이메일과 이용 기록만 보관해요.</p><p class="err hidden" id="pwE"></p>');
+    let done = false; const fin = v => { if (!done) { done = true; resolve(v); } };
+    m.el.querySelector('.x').addEventListener('click', () => fin(false));
+    m.el.addEventListener('click', e => { if (e.target === m.el) fin(false); });
+    m.el.querySelectorAll('.pwLink').forEach(a => a.addEventListener('click', () => { m.close(); fin(false); }));
+    m.el.querySelector('#pwG').onclick = async () => {
+      try { await login(); m.close(); fin(true); }
+      catch (e) { const er = m.el.querySelector('#pwE'); er.textContent = '로그인하지 못했어요. 팝업 차단을 풀고 다시 눌러 주세요. (' + (e.code || e.message) + ')'; er.classList.remove('hidden'); }
+    };
+  });
+}
+function openPaywall() {
+  const head = isPaid() ? '<span class="eb">MY PLAN</span><h3>이용권 사용 중이에요</h3><p>' + ent.paidUntil.toLocaleDateString('ko-KR') + '까지 횟수 제한 없이 쓸 수 있어요. 지금 결제하면 기간이 30일 연장돼요.</p>'
+    : '<span class="eb">SSONGCUT PASS</span><h3>무료 체험을 모두 쓰셨어요</h3><p>이용권으로 계속 숏츠를 만들어 보세요.</p>';
+  const ready = payReady();
+  const m = modal(head + '<div class="price"><b>9,900원</b><span>/ 30일 · 1회 결제</span></div><ul><li>숏츠 생성 횟수 제한 없음</li><li>요약 · 하이라이트 · 자막 자동</li><li>1080×1920 MP4 저장 · SRT 자막</li><li>자동 결제 없음 (30일 후 자동 종료)</li></ul>'
+    + (ready ? '<label class="agree"><input type="checkbox" id="pwAg"><span><a href="#terms" class="pwLink">이용약관 · 환불 안내</a>를 확인했고 결제에 동의합니다.</span></label><button class="btn btn-primary" id="pwPay" disabled>카드로 9,900원 결제하기</button><p class="note">결제는 토스페이먼츠로 안전하게 처리돼요. 카드 정보는 쏭컷에 저장되지 않아요.</p>'
+      : '<button class="btn btn-primary" id="pwAsk">이용권 신청 · 문의하기</button><p class="note">카드 결제는 오픈 준비 중이에요. 문의를 남겨 주시면 이용권을 바로 열어 드릴게요.</p>')
+    + '<p class="err hidden" id="pwE"></p>');
+  m.el.querySelectorAll('.pwLink').forEach(a => a.addEventListener('click', () => m.close()));
+  const ag = m.el.querySelector('#pwAg'), pay = m.el.querySelector('#pwPay'), ask = m.el.querySelector('#pwAsk');
+  if (ag) ag.onchange = () => { pay.disabled = !ag.checked; };
+  if (ask) ask.onclick = () => { location.href = 'mailto:' + PAY.contact + '?subject=' + encodeURIComponent('[쏭컷] 이용권 신청') + '&body=' + encodeURIComponent('구글 로그인 이메일: ' + (user ? user.email : '') + '\n희망 이용권: 30일 (9,900원)\n'); };
+  if (pay) pay.onclick = async () => {
+    pay.disabled = true; pay.textContent = '결제창 여는 중…';
+    try { await startPay(); } catch (e) { const er = m.el.querySelector('#pwE'); er.textContent = '결제창을 열지 못했어요: ' + (e.message || e.code || e); er.classList.remove('hidden'); pay.disabled = false; pay.textContent = '카드로 9,900원 결제하기'; }
+  };
+}
+function loadToss() {
+  if (window.TossPayments) return Promise.resolve();
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://js.tosspayments.com/v2/standard'; s.onload = res; s.onerror = () => rej(new Error('결제 모듈을 불러오지 못했어요')); document.head.appendChild(s); });
+}
+async function startPay() {
+  if (!user) throw new Error('로그인이 필요해요');
+  await loadToss();
+  const tp = window.TossPayments(PAY.tossClientKey);
+  const payment = tp.payment({ customerKey: user.uid });
+  const back = location.origin + location.pathname;
+  await payment.requestPayment({
+    method: 'CARD', amount: { currency: 'KRW', value: PAY.price },
+    orderId: 'sc-' + user.uid + '-' + Date.now(), orderName: PAY.orderName,
+    successUrl: back + '?pay=success', failUrl: back + '?pay=fail',
+    customerEmail: user.email || undefined, customerName: user.displayName || undefined,
+    card: { useEscrow: false, flowMode: 'DEFAULT', useCardPoint: false, useAppCardOnly: false }
+  });
+}
+async function handleReturn() {
+  const q = new URLSearchParams(location.search); const st = q.get('pay'); if (!st) return;
+  const clean = () => history.replaceState(null, '', location.pathname + location.hash);
+  if (st === 'fail') { say('결제가 완료되지 않았어요. ' + (q.get('message') || '')); clean(); return; }
+  await authReadyP;
+  if (!user) { say('로그인 후 다시 확인해 주세요.'); return; }
+  say('결제를 확인하고 있어요…');
+  try {
+    const r = await fetch(PAY.backend, { method: 'POST', body: JSON.stringify({ action: 'confirm', idToken: await user.getIdToken(), paymentKey: q.get('paymentKey'), orderId: q.get('orderId'), amount: Number(q.get('amount')) }) });
+    const j = await r.json();
+    if (j.ok) { await loadEnt(); renderAcct(); say('결제 완료! ' + (ent && ent.paidUntil ? ent.paidUntil.toLocaleDateString('ko-KR') + '까지' : '30일 동안') + ' 쏭컷을 마음껏 쓰세요.'); }
+    else say('결제 확인에 실패했어요 (' + j.code + '). 문의: ' + PAY.contact);
+  } catch (e) { say('결제 확인 중 오류가 났어요. 문의: ' + PAY.contact); }
+  clean();
+}
+window.SCPay = {
+  async gate() {
+    if (!user) await authReadyP;
+    if (!user) { const ok = await openLogin(); if (!ok) return false; }
+    try { await loadEnt(); } catch (e) { say('이용 정보를 불러오지 못했어요. 새로고침 후 다시 시도해 주세요.'); return false; }
+    renderAcct();
+    if (isPaid() || (ent.freeUsed || 0) < 1) return true;
+    openPaywall(); return false;
+  },
+  async consume() {
+    try { if (!user || isPaid() || !ent || (ent.freeUsed || 0) >= 1) return; await updateDoc(doc(db, 'ssongcut_users', user.uid), { freeUsed: 1, updatedAt: serverTimestamp() }); ent.freeUsed = 1; renderAcct(); say('무료 체험 1회를 사용했어요. 다음부터는 이용권이 필요해요.'); } catch (e) { console.warn(e); }
+  },
+  openPaywall, state: () => ({ user: user && user.email, ent })
+};
+onAuthStateChanged(auth, async u => { user = u; try { await loadEnt(); } catch (e) { ent = null; } renderAcct(); authReady(); });
+renderAcct();
+handleReturn();
+</script>
+<!-- SSONGCUT_PAY_END -->
 </body>
 </html>
