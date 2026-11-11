@@ -1286,7 +1286,7 @@ window.__ssongcut = S; window.__ssongcutRender = renderShort;
 </style>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 const PAY = {
   price: 9900, days: 30, orderName: '쏭컷 AI 이용권 30일',
@@ -1336,7 +1336,13 @@ function modal(html) {
   return { el: b, close };
 }
 async function login() {
-  const cred = await signInWithPopup(auth, new GoogleAuthProvider());
+  const prov = new GoogleAuthProvider();
+  let cred;
+  try { cred = await signInWithPopup(auth, prov); }
+  catch (e) {
+    if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')) { await signInWithRedirect(auth, prov); return false; }
+    throw e;
+  }
   user = cred.user; await loadEnt(); renderAcct(); return true;
 }
 function openLogin() {
@@ -1417,6 +1423,7 @@ window.SCPay = {
   openPaywall, state: () => ({ user: user && user.email, ent })
 };
 onAuthStateChanged(auth, async u => { user = u; try { await loadEnt(); } catch (e) { ent = null; } renderAcct(); authReady(); });
+getRedirectResult(auth).catch(e => { if (e && e.code) say('로그인하지 못했어요 (' + e.code + ')'); });
 renderAcct();
 handleReturn();
 </script>
