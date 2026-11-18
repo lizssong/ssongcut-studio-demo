@@ -262,13 +262,31 @@ textarea.inp{height:auto;min-height:62px;padding:10px 12px;resize:vertical;line-
 }
 @media (max-width:560px){.logo small,.nav .badge{display:none}.wrap{padding:0 16px}.eyebrow{font-size:12px}.studio{padding:6px;border-radius:20px}.opts{padding:16px}.fgrid{grid-template-columns:1fr}.phone{width:150px}.phone .ttl{font-size:12px}.phone .cap{font-size:12px}}
 </style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#08080d">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="쏭컷">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+.pwa-guide{position:fixed;inset:0;z-index:95;background:rgba(4,4,8,.74);backdrop-filter:blur(6px);display:grid;place-items:center;padding:20px}
+.pwa-guide .box{max-width:380px;width:100%;background:var(--panel);border:1px solid var(--line2);border-radius:18px;padding:24px;text-align:left}
+.pwa-guide h4{font-size:18px;font-weight:800;margin-bottom:10px}
+.pwa-guide ol{padding-left:20px;color:var(--muted);font-size:14.5px;line-height:1.8}
+.pwa-guide ol b{color:var(--text)}
+.pwa-guide .btn{margin-top:16px;width:100%}
+@media (max-width:560px){#pwaInstall{padding:0 10px}.nav-cta{gap:6px}}
+@media (max-width:420px){#pwaInstall .pi-l{display:none}}
+</style>
 </head>
 <body>
 
 <nav class="nav"><div class="wrap">
   <a class="logo" href="#" id="homeLink"><span class="logo-mark"><svg viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z" fill="#fff"/></svg></span>쏭컷 AI<small>STUDIO</small></a>
   <div class="nav-links"><a href="#features">기능</a><a href="#how">사용 방법</a><a href="#faq">자주 묻는 질문</a></div>
-  <div class="nav-cta"><div class="acct" id="acct"></div><span class="badge">BETA</span><button class="btn btn-primary btn-sm" id="navUpload">영상 올리기</button></div>
+  <div class="nav-cta"><div class="acct" id="acct"></div><span class="badge">BETA</span><button class="btn btn-ghost btn-sm hidden" id="pwaInstall" type="button"><span class="pi-l">앱 </span>설치</button><button class="btn btn-primary btn-sm" id="navUpload">영상 올리기</button></div>
 </div></nav>
 
 <!-- ============ LANDING ============ -->
@@ -1252,6 +1270,7 @@ async function exportOne(sh, btn, quiet) {
 
 syncSegs(); syncEngine();
 window.__ssongcut = S; window.__ssongcutRender = renderShort;
+window.SCApp = { setFile, show, toast };
 })();
 </script>
 
@@ -1428,5 +1447,73 @@ renderAcct();
 handleReturn();
 </script>
 <!-- SSONGCUT_PAY_END -->
+<!-- SSONGCUT_PWA_START -->
+<script>
+(() => {
+  const isStandalone = () => matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: window-controls-overlay)').matches || navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const btn = document.getElementById('pwaInstall');
+  const A = window.SCApp || {};
+  const note = (m, ms) => { try { (A.toast || console.log)(m, ms); } catch (_) {} };
+  let deferred = null;
+
+  if ('serviceWorker' in navigator) {
+    addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch((e) => console.warn('sw', e)); });
+  }
+
+  // 1) 설치 버튼: 크롬·엣지·안드로이드는 설치 창, 아이폰은 홈 화면 추가 안내
+  addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferred = e; btn.classList.remove('hidden'); });
+  addEventListener('appinstalled', () => { deferred = null; btn.classList.add('hidden'); try { note('쏭컷 앱이 설치됐어요. 바탕화면·홈 화면에서 열 수 있어요.', 3600); } catch (_) {} });
+  if (isIOS && !isStandalone()) btn.classList.remove('hidden');
+  btn.addEventListener('click', async () => {
+    if (deferred) { deferred.prompt(); const r = await deferred.userChoice.catch(() => null); deferred = null; if (!r || r.outcome !== 'accepted') btn.classList.remove('hidden'); else btn.classList.add('hidden'); return; }
+    const g = document.createElement('div'); g.className = 'pwa-guide';
+    g.innerHTML = isIOS
+      ? '<div class="box"><h4>아이폰·아이패드에 쏭컷 설치</h4><ol><li>사파리 아래쪽 <b>공유 버튼(□↑)</b>을 눌러요.</li><li><b>홈 화면에 추가</b>를 눌러요.</li><li>오른쪽 위 <b>추가</b>를 누르면 끝!</li></ol><button class="btn btn-primary" type="button">알겠어요</button></div>'
+      : '<div class="box"><h4>쏭컷 앱 설치</h4><ol><li>크롬·엣지 주소창 오른쪽의 <b>설치 아이콘</b>을 눌러요.</li><li>또는 브라우저 메뉴(⋮)에서 <b>앱 설치</b> / <b>홈 화면에 추가</b>를 눌러요.</li></ol><button class="btn btn-primary" type="button">알겠어요</button></div>';
+    g.addEventListener('click', (e) => { if (e.target === g || e.target.closest('.btn')) g.remove(); });
+    document.body.appendChild(g);
+  });
+
+  // 2) 파일 받아서 쏭컷에 바로 넣기
+  async function openInStudio(file, how) {
+    if (!file) return;
+    try { A.show('vHome'); } catch (_) {}
+    const studio = document.getElementById('studio'); if (studio) studio.scrollIntoView({ block: 'center' });
+    await A.setFile(file);
+    try { note((how === 'share' ? '공유한 영상' : '연결된 영상') + '을 불러왔어요: ' + file.name, 3200); } catch (_) {}
+  }
+  window.SCOpenFile = openInStudio;
+
+  // PC: 설치한 쏭컷으로 .mp4 · .mov 등을 '연결 프로그램'으로 열 때
+  if ('launchQueue' in window) {
+    launchQueue.setConsumer(async (params) => {
+      if (!params || !params.files || !params.files.length) return;
+      try { const f = await params.files[0].getFile(); await openInStudio(f, 'file'); } catch (e) { console.warn(e); try { note('파일을 열지 못했어요. 영상 올리기로 다시 선택해 주세요.'); } catch (_) {} }
+    });
+  }
+
+  // 안드로이드: 갤러리에서 '공유 → 쏭컷'으로 보냈을 때
+  const q = new URLSearchParams(location.search);
+  const src = q.get('source');
+  if (src === 'share' || src === 'share-empty') {
+    (async () => {
+      try {
+        if (src === 'share-empty') { note('공유된 영상 파일을 찾지 못했어요. 영상 올리기로 선택해 주세요.', 3600); return; }
+        const c = await caches.open('ssongcut-share');
+        const res = await c.match('./__shared-video');
+        if (!res) { note('공유된 영상을 찾지 못했어요. 다시 공유해 주세요.', 3600); return; }
+        const blob = await res.blob();
+        const name = decodeURIComponent(res.headers.get('x-file-name') || 'shared-video.mp4');
+        await c.delete('./__shared-video');
+        await openInStudio(new File([blob], name, { type: blob.type || 'video/mp4' }), 'share');
+      } catch (e) { console.warn(e); }
+    })();
+  }
+  if (src) history.replaceState(null, '', location.pathname + location.hash);
+  if (location.hash === '#upload') setTimeout(() => { try { A.show('vHome'); } catch (_) {} document.getElementById('studio')?.scrollIntoView({ block: 'center' }); }, 300);
+})();
+</script>
+<!-- SSONGCUT_PWA_END -->
 </body>
 </html>
