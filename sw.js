@@ -1,6 +1,6 @@
 /* 쏭컷 AI 스튜디오 service worker */
-const VERSION = 'ssongcut-v1';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
+const VERSION = 'ssongcut-v3';
+const SHELL = ['./', './index.html', './studio.html', './cut.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 const SHARE_CACHE = 'ssongcut-share';
 
 self.addEventListener('install', (e) => {
@@ -39,9 +39,9 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   if (req.mode === 'navigate') {                               // 항상 최신 페이지, 오프라인일 때만 저장본
     e.respondWith(fetch(req).then((res) => {
-      if (res.ok && !url.search) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put('./', copy)); }
+      if (res.ok) { const copy = res.clone(); const key = url.pathname.endsWith('/') ? './' : url.pathname; caches.open(VERSION).then((c) => c.put(key, copy)); }
       return res;
-    }).catch(() => caches.match('./', { ignoreSearch: true })));
+    }).catch(async () => (await caches.match(url.pathname, { ignoreSearch: true })) || caches.match('./', { ignoreSearch: true })));
     return;
   }
   if (SHELL.some((p) => url.pathname.endsWith(p.replace('./', '/')) && p !== './')) {

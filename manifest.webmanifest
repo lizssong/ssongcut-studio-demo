@@ -2,7 +2,7 @@
   "id": "./",
   "name": "쏭컷 AI 스튜디오",
   "short_name": "쏭컷",
-  "description": "긴 영상을 올리면 AI가 요약하고 핵심 장면을 골라 자막까지 입힌 9:16 숏츠로 만들어 주는 위드AI솔루션 송민경(쏭리즈)의 쏭컷 AI 스튜디오",
+  "description": "긴 영상은 AI가 요약해 자막 입힌 숏츠로, 사진·영상은 템플릿·전환·배경음악을 넣은 쇼츠·릴스로, 음악은 박자에 맞춘 뮤직비디오로 만드는 위드AI솔루션 송민경(쏭리즈)의 쏭컷 AI 스튜디오",
   "lang": "ko",
   "dir": "ltr",
   "start_url": "./?source=pwa",
@@ -100,6 +100,39 @@
       "name": "영상 올리기",
       "short_name": "영상 올리기",
       "url": "./?source=shortcut#upload",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "사진·영상 편집",
+      "short_name": "사진·영상 편집",
+      "url": "./studio.html?source=shortcut",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "음악 → 뮤직비디오",
+      "short_name": "뮤직비디오",
+      "url": "./studio.html?mode=mv&source=shortcut",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "공백 컷편집",
+      "short_name": "공백 컷편집",
+      "url": "./cut.html?source=shortcut",
       "icons": [
         {
           "src": "icons/icon-192.png",
