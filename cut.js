@@ -29,7 +29,13 @@
     상태.길이 = video.duration;
     오디오 = 오디오 || new AudioContext();
     try {
-      const 소리 = await 오디오.decodeAudioData(await 파일.arrayBuffer());
+      let 소리;
+      if (window.SCMedia && (파일.size > 150 * 1048576 || 상태.길이 > 600)) {
+        /* 긴 영상은 통째로 풀지 않고 조금씩 읽어 16kHz 소리만 만든다 */
+        drop.querySelector("h3").textContent = "긴 영상의 소리를 읽는 중… (1시간 영상은 약 1분)";
+        const r = await window.SCMedia.speech16k(파일);
+        소리 = { duration: r.pcm.length / 16000, sampleRate: 16000, numberOfChannels: 1, getChannelData: () => r.pcm };
+      } else 소리 = await 오디오.decodeAudioData(await 파일.arrayBuffer());
       상태.크기 = 소리크기(소리);
       상태.소리있음 = true;
     } catch {
@@ -173,23 +179,25 @@
       ctx.fillStyle = "#fff"; ctx.fillText(l, cx, 시작 + i * 높이);
     });
   }
-  function 그리기(나온시간) {
-    if (!video.videoWidth) return;
-    const W = view.width, H = view.height, vw = video.videoWidth, vh = video.videoHeight;
+  function 그리기(나온시간, 원본, 원본시간) {
+    const 그림 = 원본 || video;
+    if (!원본 && !video.videoWidth) return;
+    const W = view.width, H = view.height, vw = 원본 ? (원본.displayWidth || 원본.codedWidth) : video.videoWidth, vh = 원본 ? (원본.displayHeight || 원본.codedHeight) : video.videoHeight;
+    const 지금 = 원본시간 ?? video.currentTime;
     vctx.save();
     vctx.fillStyle = "#000"; vctx.fillRect(0, 0, W, H);
     if (Math.abs(W / H - vw / vh) > 0.01) {
       const 덮 = Math.max(W / vw, H / vh);
       vctx.filter = "blur(28px) brightness(0.8)";
-      vctx.drawImage(video, (W - vw * 덮) / 2, (H - vh * 덮) / 2, vw * 덮, vh * 덮);
+      vctx.drawImage(그림, (W - vw * 덮) / 2, (H - vh * 덮) / 2, vw * 덮, vh * 덮);
       vctx.filter = "none";
     }
     const 맞 = Math.min(W / vw, H / vh);
-    vctx.drawImage(video, (W - vw * 맞) / 2, (H - vh * 맞) / 2, vw * 맞, vh * 맞);
+    vctx.drawImage(그림, (W - vw * 맞) / 2, (H - vh * 맞) / 2, vw * 맞, vh * 맞);
     const 기준 = Math.min(W, H) / 1080, 제목 = $("title").value.trim();
-    const t = 나온시간 ?? 출력시간(video.currentTime);
+    const t = 나온시간 ?? 출력시간(지금);
     if (제목 && t < Number($("titleSec").value)) 글자(vctx, 제목, W / 2, H * (H > W ? 0.12 : 0.08), 84 * 기준, W * 0.86, false);
-    const 큐 = 상태.자막.find((c) => video.currentTime >= c.a && video.currentTime < c.b);
+    const 큐 = 상태.자막.find((c) => 지금 >= c.a && 지금 < c.b);
     if (큐) 글자(vctx, 큐.글, W / 2, H * (H > W ? 0.8 : 0.92), 62 * 기준, W * 0.86, true);
     vctx.restore();
   }
@@ -262,7 +270,63 @@
     const 후보 = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
     return 후보.find((m) => window.MediaRecorder && MediaRecorder.isTypeSupported(m));
   }
+  /* 빠르고 정확한 저장: 남길 조각만 풀어서 그리고 MP4(H.264+AAC)로 바로 만든다. 탭을 옮겨도 멈추지 않는다 */
+  async function 내보내기WC(조각, 총) {
+    if (!window.SCMedia || !window.VideoEncoder || !window.AudioEncoder) throw new Error('NO_WC');
+    const 파일 = 상태.파일, P = await window.SCMedia.probe(파일);
+    if (!P.video || P.video.rotated) throw new Error('NO_WC');
+    const M = await import('https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/+esm');
+    const W = view.width - view.width % 2, H = view.height - view.height % 2, FPS = 30;
+    let vcfg = null;
+    for (const codec of ['avc1.640028', 'avc1.4d0028', 'avc1.42002a', 'avc1.640033']) { const c = { codec, width: W, height: H, bitrate: Math.max(W, H) >= 1900 ? 8e6 : 5e6, framerate: FPS, avc: { format: 'avc' } }; try { if ((await VideoEncoder.isConfigSupported(c)).supported) { vcfg = c; break; } } catch (_) {} }
+    if (!vcfg) throw new Error('NO_WC');
+    const 소리켬 = 상태.소리있음 && P.audio && P.audio.ok, acfg = { codec: 'mp4a.40.2', sampleRate: 48000, numberOfChannels: 2, bitrate: 160000 };
+    const 소리됨 = 소리켬 && (await AudioEncoder.isConfigSupported(acfg)).supported;
+    const 긴 = 총 > 300; let target, fh = null, ws = null;
+    if (긴) { const root = await navigator.storage.getDirectory(); for await (const [n] of root.entries()) if (/^cut-/.test(n)) { try { await root.removeEntry(n); } catch (_) {} } fh = await root.getFileHandle('cut-' + Date.now() + '.mp4', { create: true }); ws = await fh.createWritable(); target = new M.FileSystemWritableFileStreamTarget(ws); }
+    else target = new M.ArrayBufferTarget();
+    const mux = new M.Muxer({ target, video: { codec: 'avc', width: W, height: H, frameRate: FPS }, audio: 소리됨 ? { codec: 'aac', sampleRate: 48000, numberOfChannels: 2 } : undefined, fastStart: 긴 ? false : 'in-memory', firstTimestampBehavior: 'offset' });
+    let 오류 = null;
+    const ve = new VideoEncoder({ output: (c, m) => mux.addVideoChunk(c, m), error: (e) => { 오류 = e; } }); ve.configure(vcfg);
+    const ae = 소리됨 ? new AudioEncoder({ output: (c, m) => mux.addAudioChunk(c, m), error: (e) => { 오류 = e; } }) : null; if (ae) ae.configure(acfg);
+    /* 조각마다 출력 시작 시간을 정해 두고, 가까이 붙은 조각들은 한 번에 풀어 처리한다 (매번 처음부터 푸는 낭비 없음) */
+    const 표 = []; { let o = 0; for (const [a, b] of 조각) { 표.push({ a, b, o }); o += b - a; } }
+    const 묶음 = []; for (const s of [...표].sort((x, y) => x.a - y.a)) { const g = 묶음[묶음.length - 1]; if (g && s.a - g.b < 4 && s.a >= g.a) { g.b = Math.max(g.b, s.b); g.s.push(s); } else 묶음.push({ a: s.a, b: s.b, s: [s] }); }
+    /* 훅 조각처럼 순서가 앞으로 가는 조각이 있으면 출력 시간 순서대로 하나씩 */
+    const 순서대로 = 표.every((s, i) => !i || s.a >= 표[i - 1].a);
+    const 처리묶음 = 순서대로 ? 묶음 : 표.map((s) => ({ a: s.a, b: s.b, s: [s] }));
+    let 장 = 0, 마지막 = -1, 끝낸 = 0;
+    for (const [gi, g] of 처리묶음.entries()) {
+      if (ae) { /* 조각 소리: 이음새에서 딸깍 소리가 나지 않게 아주 짧게 줄였다 키운다 */
+        const buf = await window.SCMedia.range48(파일, g.a, g.b), sr = 48000, c0 = buf.getChannelData(0), c1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : c0, f = 240;
+        for (const s of g.s) { const p0 = Math.round((s.a - g.a) * sr), n = Math.round((s.b - s.a) * sr);
+          for (let off = 0; off < n; off += 1024) { const k = Math.min(1024, n - off), d = new Float32Array(k * 2); for (let j = 0; j < k; j++) { const p = off + j, q = p0 + p, gg = Math.min(1, p / f, (n - p) / f); d[j] = (c0[q] || 0) * gg; d[k + j] = (c1[q] || 0) * gg; }
+            const ad = new AudioData({ format: 'f32-planar', sampleRate: sr, numberOfFrames: k, numberOfChannels: 2, timestamp: Math.round((s.o + off / sr) * 1e6), data: d }); ae.encode(ad); ad.close(); if (오류) throw 오류; } }
+      }
+      await window.SCMedia.decodeVideo(파일, g.a, g.b, (frame, t) => {
+        const s = g.s.find((x) => t >= x.a - 0.001 && t < x.b); if (!s) return; const ot = s.o + Math.max(0, t - s.a); if (ot - 마지막 < 1 / (FPS + 1)) return;
+        그리기(ot, frame, t); const vf = new VideoFrame(view, { timestamp: Math.round(ot * 1e6), duration: Math.round(1e6 / FPS) }); ve.encode(vf, { keyFrame: 장 % (FPS * 2) === 0 }); vf.close(); 장++; 마지막 = ot;
+        끝낸 = Math.max(끝낸, ot); $("bar").style.width = `${Math.min(99, (끝낸 / 총) * 100)}%`; $("progText").textContent = `저장 중 · ${시각(끝낸)} / ${시각(총)}`;
+      }, () => ({ err: 오류, queue: ve.encodeQueueSize }));
+    }
+    await ve.flush(); ve.close(); if (ae) { await ae.flush(); ae.close(); } if (오류) throw 오류;
+    mux.finalize();
+    let blob; if (긴) { await ws.close(); blob = await fh.getFile(); } else blob = new Blob([target.buffer], { type: 'video/mp4' });
+    return { blob, 확장: 'mp4' };
+  }
   async function 내보내기() {
+    if (!상태.내보내는중) {
+      const 조각0 = 남긴것().map((g) => [g.a, g.b]); const 후0 = $("hook").value === "" ? null : Math.max(0, Math.min(Number($("hook").value), 상태.길이 - 0.5)); if (후0 !== null) 조각0.unshift([후0, Math.min(상태.길이, 후0 + 3)]);
+      if (조각0.length) {
+        const 총0 = 조각0.reduce((n, [a, b]) => n + b - a, 0);
+        상태.내보내는중 = true; video.pause(); $("export").disabled = true; $("prog").classList.remove("hidden");
+        try {
+          const r = await 내보내기WC(조각0, 총0); const a = document.createElement("a"); a.href = URL.createObjectURL(r.blob); a.download = `${상태.파일.name.replace(/\.[^.]+$/, "")}_songcut.mp4`; a.click(); window.__cutLast = r;
+          $("bar").style.width = '100%'; $("progText").textContent = `끝 — ${a.download} (${(r.blob.size / 1048576).toFixed(1)}MB · ${시각(총0)})`; return;
+        } catch (e) { if (e && e.message !== 'NO_WC') { console.warn(e); $("progText").textContent = `빠른 저장이 안 돼 실시간 녹화로 저장해요 — ${e.message}`; } }
+        finally { 상태.내보내는중 = false; $("export").disabled = false; }
+      }
+    }
     const 종류 = 형식();
     if (!종류) return alert("이 브라우저는 영상 녹화(MediaRecorder)를 지원하지 않습니다. 크롬이나 엣지에서 열어 주세요.");
     const 조각 = 남긴것().map((g) => [g.a, g.b]);

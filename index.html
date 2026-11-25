@@ -205,7 +205,11 @@ footer a{color:var(--muted)}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:16px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;transition:.2s}
 .card:hover{border-color:rgba(167,139,250,.45);transform:translateY(-2px)}
+.envwarn{max-width:760px;margin:0 auto 16px;padding:12px 16px;border-radius:12px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:#fde68a;font-size:14px;font-weight:600;text-align:center}
 .thumb{position:relative;aspect-ratio:9/16;background:#000;cursor:pointer}
+body.r169 .thumb{aspect-ratio:16/9} body.r11 .thumb{aspect-ratio:1/1}
+body.r169 .cards{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+body.r169 .ed-l canvas{aspect-ratio:16/9;width:min(560px,86vw);height:auto} body.r11 .ed-l canvas{aspect-ratio:1/1;width:min(440px,84vw);height:auto}
 .thumb canvas{width:100%;height:100%;display:block}
 .thumb .score{position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15);padding:4px 10px;border-radius:99px}
 .thumb .score i{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:14px}
@@ -311,13 +315,14 @@ textarea.inp{height:auto;min-height:62px;padding:10px 12px;resize:vertical;line-
     <div class="eyebrow"><b>AI AUTO</b>업로드 한 번이면 요약 · 하이라이트 · 자막까지</div>
     <h1>긴 영상 하나만 올리세요.<br><span class="grad">숏츠는 AI가 자막까지</span> 완성합니다.</h1>
     <p class="lead">강의·라이브·인터뷰 영상을 AI가 끝까지 듣고 이야기를 요약한 뒤, 가장 반응이 좋을 장면만 골라 9:16 숏츠로 만들어요. 자막은 말하는 타이밍에 맞춰 자동으로 입혀집니다.</p>
-    <div class="trust"><span><i>✓</i>구글 로그인 · 첫 1회 무료</span><span><i>✓</i>영상 원본은 업로드하지 않음</span><span><i>✓</i>1080×1920 MP4 바로 저장</span></div>
+    <div class="trust"><span><i>✓</i>구글 로그인 · 첫 1회 무료</span><span><i>✓</i>영상 원본은 업로드하지 않음</span><span><i>✓</i>최대 2시간 영상 · 세로·가로·정사각 MP4</span></div>
+    <div id="envWarn" class="envwarn hidden" role="status"></div>
 
     <div class="studio" id="studio"><div class="studio-inner">
       <div class="drop" id="drop" tabindex="0" role="button" aria-label="영상 파일 선택">
         <div class="drop-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></div>
         <h3>여기에 영상을 끌어다 놓으세요</h3>
-        <p>MP4 · MOV · WebM · 말소리가 있는 영상 (최대 60분 권장)</p>
+        <p>MP4 · MOV · WebM · 말소리가 있는 영상 (최대 2시간 · MP4·MOV는 8GB까지)</p>
         <span class="btn btn-ghost">내 PC에서 영상 선택</span>
         <input type="file" id="file" accept="video/*" hidden>
         <div class="drop-file hidden" id="dropFile">
@@ -412,7 +417,8 @@ textarea.inp{height:auto;min-height:62px;padding:10px 12px;resize:vertical;line-
     <h2>숏츠 <span class="grad" id="rCount">0편</span>이 완성됐어요<span id="rFile"></span></h2>
     <button class="btn btn-ghost btn-sm" id="rNew">새 영상</button>
     <button class="btn btn-ghost btn-sm" id="rSrt">전체 자막 SRT</button>
-    <select class="sel" id="rRes" style="width:auto;height:36px"><option value="1080">1080p</option><option value="720">720p</option></select>
+    <select class="sel" id="rRatio" style="width:auto;height:36px" aria-label="화면 비율"><option value="9:16">세로 9:16 (쇼츠·릴스)</option><option value="16:9">가로 16:9 (유튜브)</option><option value="1:1">정사각 1:1</option></select>
+<select class="sel" id="rRes" style="width:auto;height:36px"><option value="1080">1080p</option><option value="720">720p</option></select>
     <button class="btn btn-primary btn-sm" id="rAll">⬇ 모두 MP4로 저장</button>
   </div>
   <div class="res-grid">
@@ -487,6 +493,7 @@ self.onmessage = async (e) => {
 };
 </script>
 
+<script src="media.js?v=9"></script>
 <script>
 (() => {
 const $ = (s, r = document) => r.querySelector(s);
@@ -494,11 +501,14 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const FONT = '"Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif';
 const PRESETS = { impact: '#FFE14D', brand: '#C4B5FD', clean: '#5EEAD4' };
 const COLORS = ['#FFE14D', '#C4B5FD', '#5EEAD4', '#FF7AB6', '#FFFFFF'];
+const MAX_DUR = 2 * 3600; /* AI 숏츠 최대 길이 (2시간) */
+const RATIO_DIM = { '9:16': [9, 16], '16:9': [16, 9], '1:1': [1, 1] };
+function outDims(res) { const r = RATIO_DIM[S.style.ratio || '9:16']; const short = res === 720 ? 720 : 1080; return r[0] < r[1] ? [short, Math.round(short * r[1] / r[0] / 2) * 2] : r[0] > r[1] ? [Math.round(short * r[0] / r[1] / 2) * 2, short] : [short, short]; }
 const LENS = { short: [15, 30, 24], mid: [30, 60, 45], long: [60, 90, 75] };
 const S = {
   file: null, url: null, dur: 0, vw: 0, vh: 0,
   opts: { len: 'mid', layout: 'blur', preset: 'impact', engine: 'gemini' }, env: null,
-  style: { layout: 'blur', preset: 'impact', accent: '#FFE14D', brand: (localStorage.getItem('ssongcut.brand') || ''), cropX: 0.5 },
+  style: { layout: 'blur', preset: 'impact', accent: '#FFE14D', brand: (localStorage.getItem('ssongcut.brand') || ''), cropX: 0.5, ratio: '9:16' },
   words: [], sents: [], analysis: null, shorts: [], cancel: false, worker: null, workerModel: null, busyExport: false,
 };
 
@@ -506,7 +516,8 @@ const S = {
 const fmt = (t) => { t = Math.max(0, t); const m = Math.floor(t / 60), s = Math.floor(t % 60); return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0'); };
 const fmtSrt = (t) => { t = Math.max(0, t); const h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = Math.floor(t % 60), ms = Math.round((t % 1) * 1000) % 1000; return [h, m, s].map(x => String(x).padStart(2, '0')).join(':') + ',' + String(ms).padStart(3, '0'); };
 const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const sleepT = (ms) => new Promise(r => setTimeout(r, ms));
+const sleep = (ms) => ms > 4 ? sleepT(ms) : new Promise(r => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); }); /* 탭이 뒤에 있어도 느려지지 않게 */
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function toast(msg, ms = 2600) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), ms); }
 function show(id) { ['vHome', 'vProc', 'vRes'].forEach(v => $('#' + v).classList.toggle('hidden', v !== id)); window.scrollTo({ top: 0 }); }
@@ -546,7 +557,9 @@ fileIn.addEventListener('change', () => { if (fileIn.files[0]) setFile(fileIn.fi
 
 async function setFile(f) {
   if (!/^video\//.test(f.type) && !/\.(mp4|mov|webm|m4v|mkv)$/i.test(f.name)) { toast('영상 파일만 올릴 수 있어요.'); return; }
-  if (f.size > 2.5e9) { toast('2.5GB 이하 영상을 올려주세요.'); return; }
+  const isMp4 = /\.(mp4|m4v|mov)$/i.test(f.name) || /mp4|quicktime/.test(f.type);
+if (!isMp4 && f.size > 700 * 1048576) { toast('WebM·MKV는 700MB까지 가능해요. 더 큰 영상은 MP4나 MOV로 올려주세요.', 5200); return; }
+if (f.size > 8 * 1073741824) { toast('8GB 이하 영상을 올려주세요.'); return; }
   if (S.url) URL.revokeObjectURL(S.url);
   S.file = f; S.url = URL.createObjectURL(f);
   const pv = $('#pv'); pv.src = S.url;
@@ -557,7 +570,8 @@ async function setFile(f) {
   $('#dropFile').classList.remove('hidden');
   $('#fName').textContent = f.name;
   $('#fMeta').textContent = `${fmt(S.dur)} · ${S.vw}×${S.vh} · ${(f.size / 1048576).toFixed(1)}MB`;
-  if (S.dur > 3700) toast('60분이 넘는 영상은 처리 중 브라우저 메모리가 부족할 수 있어요.', 4200);
+  if (S.dur > MAX_DUR + 5) { toast(`AI 숏츠는 ${Math.round(MAX_DUR / 60)}분까지 올릴 수 있어요. 앞부분만 쓰려면 영상을 나눠서 올려주세요.`, 5600); S.file = null; $('#start').disabled = true; $('#dropFile').classList.add('hidden'); return; }
+if (S.dur > 3600) toast('1시간이 넘는 영상이에요. 받아쓰기에 시간이 꽤 걸려요(Gemini 기준 영상 10분당 약 1분).', 5200);
   $('#start').disabled = false;
 }
 
@@ -653,6 +667,8 @@ async function runPipeline() {
     $('#pTitle').textContent = '잠깐, 문제가 생겼어요';
     let msg = String(err && err.message || err);
     if (msg === 'BAD_KEY') msg = 'Gemini 키로 연결하지 못했어요. 키를 다시 복사해 넣거나 ‘내 PC · 키 없이’ 엔진을 골라 주세요.';
+    else if (msg === 'TOO_BIG_FORMAT') msg = '이 형식(WebM·MKV 등)의 큰 영상은 처리할 수 없어요. MP4나 MOV로 바꿔 올려 주세요.';
+    else if (msg === 'AUDIO_CODEC') msg = '이 영상의 소리 형식을 이 브라우저가 풀지 못해요. 휴대폰·카메라 기본 MP4(AAC 소리)로 다시 저장해 올려 주세요.';
     else if (msg === 'NO_AUDIO') msg = '영상에서 소리를 찾지 못했어요. 말소리가 있는 영상인지 확인해 주세요.';
     else if (msg === 'NO_SPEECH') msg = '말소리를 거의 인식하지 못했어요. 배경음악만 있거나 소리가 너무 작은 영상일 수 있어요.';
     else if (/memory|Array buffer allocation|allocation failed/i.test(msg)) msg = '영상이 커서 브라우저 메모리가 부족해요. 더 짧은 영상(30분 이하)으로 나눠서 올려주세요.';
@@ -663,16 +679,12 @@ async function runPipeline() {
 
 /* ---------- audio extraction (16kHz mono) ---------- */
 async function extractAudio(file) {
-  const ab = await file.arrayBuffer();
-  prog('audio', 0.4);
-  let buf;
-  try { const oc = new OfflineAudioContext(1, 1, 16000); buf = await oc.decodeAudioData(ab); }
-  catch (e) { throw new Error('NO_AUDIO'); }
-  prog('audio', 0.85);
-  const n = buf.length, ch = buf.numberOfChannels;
-  let out;
-  if (ch === 1) out = buf.getChannelData(0).slice();
-  else { out = new Float32Array(n); for (let c = 0; c < ch; c++) { const d = buf.getChannelData(c); for (let i = 0; i < n; i++) out[i] += d[i] / ch; } }
+  prog('audio', 0.05);
+  let r;
+  try { r = await window.SCMedia.speech16k(file, { onProgress: (f) => prog('audio', 0.05 + 0.85 * Math.min(1, Math.max(0, f)), '소리 추출 중 · ' + Math.round(Math.min(1, Math.max(0, f)) * 100) + '%') }); }
+  catch (e) { if (e && e.message === 'CANCEL') throw e; throw new Error(e && /TOO_BIG_FORMAT|AUDIO_CODEC/.test(e.message) ? e.message : 'NO_AUDIO'); }
+  prog('audio', 0.92);
+  const out = r.pcm, n = out.length;
   // 100ms energy envelope (used to snap caption timing to real speech)
   const env = new Float32Array(Math.floor(n / 1600)); for (let f = 0; f < env.length; f++) { let e = 0; for (let j = f * 1600; j < f * 1600 + 1600; j += 4) e += out[j] * out[j]; env[f] = Math.sqrt(e / 400); }
   const sorted = [...env].sort((a, b) => a - b); S.env = { env, thr: Math.max(0.004, (sorted[Math.floor(sorted.length * 0.2)] || 0) * 2.2) };
@@ -728,14 +740,15 @@ function snapTime(t, kind) {
 async function geminiTranscribe(pcm, key) {
   const sr = 16000; const chunks = planChunks(pcm, 50, 75); const results = new Array(chunks.length); let done = 0, next = 0;
   $(`#slist li[data-s="asr"] .st`).textContent = `0 / ${chunks.length}`;
+  const failed = []; let lost = 0, retry = false, queue = null;
   const worker = async () => {
-    while (next < chunks.length) {
-      const ci = next++; const [a, b] = chunks[ci]; const off = a / sr, len = (b - a) / sr;
+    while (queue ? queue.length : next < chunks.length) {
+      const ci = queue ? queue.shift() : next++; const [a, b] = chunks[ci]; const off = a / sr, len = (b - a) / sr;
       let e = 0; for (let i = a; i < b; i += 16) e += pcm[i] * pcm[i]; const rms = Math.sqrt(e / ((b - a) / 16));
       let segs = [];
       if (rms >= 0.003) {
         const body = { contents: [{ parts: [{ inlineData: { mimeType: 'audio/wav', data: wavB64(pcm, a, b) } }, { text: TR_PROMPT }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0 } };
-        let txt; try { txt = await geminiCall(key, TR_MODELS, body, 3, 120000); } catch (err) { if (err.message === 'BAD_KEY' || err.message === 'CANCEL') throw err; console.warn('chunk fail', ci, err); txt = '[]'; }
+        let txt; try { txt = await geminiCall(key, TR_MODELS, body, 3, 120000); } catch (err) { if (err.message === 'BAD_KEY' || err.message === 'CANCEL') throw err; console.warn('chunk fail', ci, err); if (!retry) { failed.push(ci); continue; } txt = '[]'; lost++; }
         let arr = []; try { arr = parseJSON(txt); if (!Array.isArray(arr)) arr = arr.segments || arr.items || []; } catch (_) { arr = []; }
         segs = arr.map(x => ({ s: +x.s, e: +x.e, t: String(x.t || x.text || '').trim() })).filter(x => x.t && isFinite(x.s) && isFinite(x.e)).map(x => ({ s: clamp(x.s, 0, len), e: clamp(Math.max(x.e, x.s + 0.3), 0, len + 0.3), t: x.t })).sort((p, q) => p.s - q.s);
         segs = segs.filter((x, i) => !(i && x.t === segs[i - 1].t && Math.abs(x.s - segs[i - 1].s) < 1.5));
@@ -747,7 +760,9 @@ async function geminiTranscribe(pcm, key) {
       if (segs.length) feed(segs[0].s, segs.slice(0, 3).map(x => x.t).join(' ').slice(0, 90));
     }
   };
-  await Promise.all(Array.from({ length: Math.min(4, chunks.length) }, worker));
+  await Promise.all(Array.from({ length: Math.min(chunks.length > 30 ? 2 : 4, chunks.length) }, worker));
+  if (failed.length) { /* 실패한 구간은 잠시 쉬었다가 한 번 더 */ prog('asr', 0.97, `다시 받아쓰는 중 · ${failed.length}구간`); await sleep(8000); retry = true; queue = failed.slice(); done -= 0; await worker(); }
+  if (lost) toast(`받아쓰기 중 ${lost}개 구간(약 ${lost}분)을 놓쳤어요. 무료 키 사용량이 몰리면 생길 수 있어요.`, 6000);
   // merge, fix overlaps, snap to speech energy, split into words
   const segs = results.flat().sort((p, q) => p.s - q.s); const words = []; let lastE = 0;
   for (const sg of segs) {
@@ -973,10 +988,10 @@ function wrap(ctx, text, maxW) {
   return res;
 }
 function drawFrame(ctx, W, H, v, sh, t, st) {
-  const k = W / 1080; const vw = v.videoWidth || v.displayWidth || 16, vh = v.videoHeight || v.displayHeight || 9; const ready = v.readyState === undefined ? true : v.readyState >= 2;
+  const k = Math.min(W, H) / 1080, land = W > H * 1.15; const vw = v.videoWidth || v.displayWidth || 16, vh = v.videoHeight || v.displayHeight || 9; const ready = v.readyState === undefined ? true : v.readyState >= 2;
   ctx.save(); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
   let fg;
-  if (st.layout === 'fill') {
+  if (st.layout === 'fill' || land) {
     const s = Math.max(W / vw, H / vh), dw = vw * s, dh = vh * s;
     if (ready) ctx.drawImage(v, (W - dw) * st.cropX, (H - dh) / 2, dw, dh);
     fg = { x: 0, y: 0, w: W, h: H };
@@ -995,9 +1010,9 @@ function drawFrame(ctx, W, H, v, sh, t, st) {
   const acc = st.accent;
   // title
   if (sh.title) {
-    const fs = 76 * k; ctx.font = `900 ${fs}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    let lines = wrap(ctx, sh.title, W * 0.84); if (lines.length > 3) lines = lines.slice(0, 3);
-    const lh = fs * 1.28; const cy = st.layout === 'fill' ? 300 * k : Math.max(fs, fg.y / 2 + 6 * k); const y0 = cy - (lines.length - 1) * lh / 2;
+    const fs = (land ? 60 : 76) * k; ctx.font = `900 ${fs}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    let lines = wrap(ctx, sh.title, W * (land ? 0.7 : 0.84)); if (lines.length > (land ? 2 : 3)) lines = lines.slice(0, land ? 2 : 3);
+    const lh = fs * 1.28; const cy = land ? 96 * k + (lines.length - 1) * lh / 2 : (st.layout === 'fill' ? 300 * k : Math.max(fs, fg.y / 2 + 6 * k)); const y0 = cy - (lines.length - 1) * lh / 2;
     lines.forEach((ln, i) => {
       const y = y0 + i * lh; const tw = ctx.measureText(ln).width;
       if (st.preset === 'impact') { ctx.lineJoin = 'round'; ctx.lineWidth = 14 * k; ctx.strokeStyle = 'rgba(0,0,0,.92)'; ctx.strokeText(ln, W / 2, y); ctx.fillStyle = (i === lines.length - 1 && lines.length > 1) ? acc : '#fff'; ctx.fillText(ln, W / 2, y); }
@@ -1007,15 +1022,15 @@ function drawFrame(ctx, W, H, v, sh, t, st) {
   // captions
   const cap = sh.caps.find(c => t >= c.s - 0.05 && t < c.end);
   if (cap) {
-    const fs = 70 * k; ctx.font = `800 ${fs}px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    const cy = st.layout === 'fill' ? H * 0.72 : Math.min(H - 300 * k, fg.y + fg.h + 150 * k);
+    const fs = (land ? 58 : 70) * k; ctx.font = `800 ${fs}px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    const cy = land ? H * 0.84 : (st.layout === 'fill' ? H * 0.72 : Math.min(H - 300 * k, fg.y + fg.h + 150 * k));
     const pop = clamp((t - cap.s) / 0.12, 0, 1); const sc = 0.92 + 0.08 * pop;
     ctx.save(); ctx.translate(W / 2, cy); ctx.scale(sc, sc);
     let items;
     if (cap.edited || !cap.words.length) items = [{ t: capText(cap), on: false }];
     else { let ai = -1; cap.words.forEach((w, i) => { if (t >= w.s - 0.03) ai = i; }); items = cap.words.map((w, i) => ({ t: i === cap.words.length - 1 ? w.t.replace(/[.,]+$/, '') : w.t, on: i === ai })); }
     // line breaking by measured width
-    const maxW = W * 0.86; const lines = [[]]; let lw = 0;
+    const maxW = W * (land ? 0.72 : 0.86); const lines = [[]]; let lw = 0;
     items.forEach(it => { const parts = it.t.split(/(?=\s)/); parts.forEach(pt => { const w = ctx.measureText(pt).width; if (lw + w > maxW && lines[lines.length - 1].length) { lines.push([]); lw = 0; pt = pt.trimStart(); } lines[lines.length - 1].push({ t: pt, on: it.on, w: ctx.measureText(pt).width }); lw += ctx.measureText(pt).width; }); });
     const lh = fs * 1.3; const y0 = -(lines.length - 1) * lh / 2;
     lines.forEach((ln, li) => {
@@ -1030,7 +1045,7 @@ function drawFrame(ctx, W, H, v, sh, t, st) {
     ctx.restore();
   }
   // brand + progress
-  if (st.brand) { ctx.font = `700 ${34 * k}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(255,255,255,.82)'; ctx.fillText(st.brand, W / 2, H - 96 * k); }
+  if (st.brand) { ctx.font = `700 ${34 * k}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(255,255,255,.82)'; ctx.fillText(st.brand, land ? W - 40 * k - ctx.measureText(st.brand).width / 2 : W / 2, land ? 50 * k : H - 96 * k); }
   const pr = clamp((t - sh.s) / (sh.e - sh.s), 0, 1); ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(0, H - 8 * k, W, 8 * k); ctx.fillStyle = acc; ctx.fillRect(0, H - 8 * k, W * pr, 8 * k);
   ctx.restore();
 }
@@ -1053,11 +1068,17 @@ function renderResults() {
   $('#sTr').innerHTML = S.sents.map((s, i) => `<div><span>${fmt(s.s)}</span><p>${esc(s.text)}</p><button data-add="${i}">+ 숏츠</button></div>`).join('');
   renderCards();
 }
+function thumbDims() { const r = S.style.ratio || '9:16'; return r === '16:9' ? [480, 270] : r === '1:1' ? [360, 360] : [270, 480]; }
+function applyRatio() {
+  const r = S.style.ratio || '9:16'; document.body.classList.toggle('r169', r === '16:9'); document.body.classList.toggle('r11', r === '1:1');
+  const [ew, eh] = r === '16:9' ? [960, 540] : r === '1:1' ? [720, 720] : [540, 960]; if (edCv.width !== ew || edCv.height !== eh) { edCv.width = ew; edCv.height = eh; }
+}
 function renderCards() {
+  applyRatio();
   $('#rCount').textContent = S.shorts.length + '편'; $('#stShorts').textContent = S.shorts.length;
   $('#cards').innerHTML = S.shorts.map((sh, i) => `
     <article class="card" data-id="${sh.id}">
-      <div class="thumb" data-open="${sh.id}"><canvas width="270" height="480"></canvas><span class="score">#${i + 1} · 핵심도 <i>${sh.score}</i></span><span class="dur">${Math.round(sh.e - sh.s)}초</span><div class="play"><i><svg width="18" height="18" viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z" fill="#000"/></svg></i></div></div>
+      <div class="thumb" data-open="${sh.id}"><canvas width="${thumbDims()[0]}" height="${thumbDims()[1]}"></canvas><span class="score">#${i + 1} · 핵심도 <i>${sh.score}</i></span><span class="dur">${Math.round(sh.e - sh.s)}초</span><div class="play"><i><svg width="18" height="18" viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z" fill="#000"/></svg></i></div></div>
       <div class="cbody"><h4>${esc(sh.title.replace(/\n/g, ' '))}</h4><div class="rng">${fmt(sh.s)} – ${fmt(sh.e)}</div><div class="why">${esc(sh.reason || '')}</div>
       <div class="cprog hidden"><i></i></div>
       <div class="cact"><button class="btn btn-ghost btn-sm" data-open="${sh.id}">편집</button><button class="btn btn-primary btn-sm" data-exp="${sh.id}">⬇ MP4</button></div></div>
@@ -1069,11 +1090,11 @@ async function renderThumbs(onProg) {
     const sh = S.shorts[i]; await loadFonts(sh);
     const c0 = sh.caps[Math.min(1, sh.caps.length - 1)]; const t = c0 ? (c0.words.length ? c0.words[Math.floor(c0.words.length / 2)].s + 0.02 : c0.s + 0.3) : sh.s + 1;
     await seek(v, t);
-    const cv = $(`.card[data-id="${sh.id}"] canvas`); if (cv) drawFrame(cv.getContext('2d'), 270, 480, v, sh, t, S.style);
+    const cv = $(`.card[data-id="${sh.id}"] canvas`); if (cv) drawFrame(cv.getContext('2d'), cv.width, cv.height, v, sh, t, S.style);
     onProg && onProg((i + 1) / S.shorts.length);
   }
 }
-async function redrawThumb(sh) { const v = $('#vThumb'); await loadFonts(sh); const c0 = sh.caps[Math.min(1, sh.caps.length - 1)]; const t = c0 ? c0.s + 0.3 : sh.s + 1; await seek(v, t); const cv = $(`.card[data-id="${sh.id}"] canvas`); if (cv) drawFrame(cv.getContext('2d'), 270, 480, v, sh, t, S.style); }
+async function redrawThumb(sh) { const v = $('#vThumb'); await loadFonts(sh); const c0 = sh.caps[Math.min(1, sh.caps.length - 1)]; const t = c0 ? c0.s + 0.3 : sh.s + 1; await seek(v, t); const cv = $(`.card[data-id="${sh.id}"] canvas`); if (cv) drawFrame(cv.getContext('2d'), cv.width, cv.height, v, sh, t, S.style); }
 
 $('#cards').addEventListener('click', (e) => {
   const o = e.target.closest('[data-open]'); if (o) { openEditor(o.dataset.open); return; }
@@ -1089,6 +1110,7 @@ $('#rNew').addEventListener('click', () => { show('vHome'); });
 $('#rSrt').addEventListener('click', () => { const srt = S.sents.map((s, i) => `${i + 1}\n${fmtSrt(s.s)} --> ${fmtSrt(s.e)}\n${s.text}\n`).join('\n'); download(new Blob([srt], { type: 'text/plain' }), safeName(S.file.name.replace(/\.[^.]+$/, '')) + '_자막.srt'); });
 $('#rAll').addEventListener('click', async () => { if (S.busyExport) return toast('저장 중인 영상이 끝나면 다시 눌러주세요.'); for (const sh of [...S.shorts]) { const btn = $(`[data-exp="${sh.id}"]`); await exportOne(sh, btn, true); } toast('모든 숏츠 저장을 마쳤어요.'); });
 
+$('#rRatio').addEventListener('change', async (e) => { S.style.ratio = e.target.value; renderCards(); await renderThumbs(); if (ED) edDraw(); toast(e.target.value === '16:9' ? '가로 16:9로 바꿨어요. 유튜브 일반 영상용이에요.' : e.target.value === '1:1' ? '정사각 1:1로 바꿨어요.' : '세로 9:16으로 바꿨어요.'); });
 /* ---------- editor ---------- */
 let ED = null; let edRaf = 0;
 const edCv = $('#edCv'), edCtx = edCv.getContext('2d'), vPrev = $('#vPrev');
@@ -1203,14 +1225,14 @@ async function framesByPlayback(sh, push, chk) {
 }
 async function renderShortWC(sh, res, onProg, mode) {
   if (!window.VideoEncoder || !window.AudioEncoder || !window.VideoFrame) throw new Error('NO_WEBCODECS');
-  const W = res === 720 ? 720 : 1080, H = W * 16 / 9; const FPS = 30;
+  const [W, H] = outDims(res); const FPS = 30;
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
   await loadFonts(sh);
   const { Muxer, ArrayBufferTarget } = await loadMuxer();
   let vcfg = null;
   for (const codec of ['avc1.640028', 'avc1.4d0028', 'avc1.42002a', 'avc1.640033']) { const c = { codec, width: W, height: H, bitrate: W === 1080 ? 8e6 : 5e6, framerate: FPS, avc: { format: 'avc' } }; try { if ((await VideoEncoder.isConfigSupported(c)).supported) { vcfg = c; break; } } catch (_) {} }
   if (!vcfg) throw new Error('NO_H264');
-  let abuf = null; try { abuf = await getAudio48(); } catch (_) { abuf = null; }
+  let abuf = null; try { abuf = await window.SCMedia.range48(S.file, sh.s, sh.e); } catch (e) { console.warn('audio range', e); abuf = null; }
   const ch = abuf ? Math.min(2, abuf.numberOfChannels) : 0; let acfg = null, acodec = null;
   if (abuf) { for (const [codec, mc] of [['mp4a.40.2', 'aac'], ['opus', 'opus']]) { const c = { codec, sampleRate: 48000, numberOfChannels: ch, bitrate: 160000 }; try { if ((await AudioEncoder.isConfigSupported(c)).supported) { acfg = c; acodec = mc; break; } } catch (_) {} } }
   const target = new ArrayBufferTarget();
@@ -1227,11 +1249,11 @@ async function renderShortWC(sh, res, onProg, mode) {
     onProg && onProg(ts / dur * 0.95);
   };
   const chk = () => ({ err: encErr, queue: venc.encodeQueueSize });
-  if (mode === 'decode') await framesByDecode(sh, push, chk); else await framesByPlayback(sh, push, chk);
+  if (mode === 'decode') await window.SCMedia.decodeVideo(S.file, sh.s, sh.e, push, chk); else await framesByPlayback(sh, push, chk);
   if (!frames) throw new Error('NO_FRAMES');
   if (acfg) {
     let aErr = null; const aenc = new AudioEncoder({ output: (c, m) => muxer.addAudioChunk(c, m), error: (e) => { aErr = e; } }); aenc.configure(acfg);
-    const sr = 48000, a0 = Math.floor(sh.s * sr), a1 = Math.min(abuf.length, Math.floor(sh.e * sr)); const chans = Array.from({ length: ch }, (_, c) => abuf.getChannelData(c));
+    const sr = 48000, a0 = 0, a1 = abuf.length; const chans = Array.from({ length: ch }, (_, c) => abuf.getChannelData(c));
     for (let off = a0; off < a1; off += 1024) { const n = Math.min(1024, a1 - off); const data = new Float32Array(n * ch); chans.forEach((d, c) => data.set(d.subarray(off, off + n), c * n)); const ad = new AudioData({ format: 'f32-planar', sampleRate: sr, numberOfFrames: n, numberOfChannels: ch, timestamp: Math.round((off - a0) / sr * 1e6), data }); aenc.encode(ad); ad.close(); if (aenc.encodeQueueSize > 50) await sleep(1); }
     await aenc.flush(); aenc.close(); if (aErr) throw aErr;
   }
@@ -1248,7 +1270,7 @@ async function renderShort(sh, res, onProg) {
   return renderShortRec(sh, res, onProg);
 }
 async function renderShortRec(sh, res, onProg) {
-  const W = res === 720 ? 720 : 1080, H = W * 16 / 9; const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
+  const [W, H] = outDims(res); const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
   const v = $('#vExp'); await loadFonts(sh);
   if (!AC) { AC = new AudioContext(); expSrc = AC.createMediaElementSource(v); expGain = AC.createGain(); expDest = AC.createMediaStreamDestination(); expSrc.connect(expDest); expSrc.connect(expGain); expGain.connect(AC.destination); }
   expGain.gain.value = S.monitor === false ? 0 : 1;
@@ -1291,12 +1313,16 @@ async function exportOne(sh, btn, quiet) {
 syncSegs(); syncEngine();
 window.__ssongcut = S; window.__ssongcutRender = renderShort;
 window.SCApp = { setFile, show, toast };
+(() => { const ok = !!(window.VideoEncoder && window.AudioEncoder && window.VideoFrame), mob = /iphone|ipad|android/i.test(navigator.userAgent), el = $('#envWarn'); if (!el) return;
+  const msg = !ok ? '이 브라우저는 빠른 저장(WebCodecs)을 지원하지 않아 저장이 느리거나 WebM으로 저장될 수 있어요. PC 크롬·엣지를 권해요.' : mob ? '휴대폰에서는 20분 이하 영상을 권해요. 긴 영상(최대 2시간)은 PC 크롬·엣지에서 올려 주세요.' : '';
+  if (msg) { el.textContent = msg; el.classList.remove('hidden'); } })();
+window.__scTest = { extractAudio, makeShort, renderCards, renderThumbs, prepareVideos, applyRatio, outDims };
 })();
 </script>
 
 <!-- SSONGCUT_PAY_BEGIN -->
-<link rel="stylesheet" href="pay.css?v=8">
-<script type="module" src="pay.js?v=8"></script>
+<link rel="stylesheet" href="pay.css?v=9">
+<script type="module" src="pay.js?v=9"></script>
 <!-- SSONGCUT_PAY_END -->
 <!-- SSONGCUT_PWA_START -->
 <script>

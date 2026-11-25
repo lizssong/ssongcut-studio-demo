@@ -114,6 +114,9 @@ const PACKS = {
   vlog: { n: '브이로그·여행', d: '밝은 색감, 경쾌한 전환, 장소 자막', sw: ['#22d3ee', '#a78bfa'], layout: 'fill', trans: 'whip', look: 'vivid', date: true, cap: 'cute', capAnim: 'pop',
     title: { font: 'Jua', weight: 400, color: '#ffffff', accent: '#fef08a', stroke: 0, shadow: 1, box: 'none', anim: 'bounce' },
     guide: '추천 순서: 장소 이름 제목 카드 → 사진·영상(시간순) → 마지막 한마디. 장면마다 장소나 느낌을 한 줄 자막으로 넣으면 좋아요.' },
+  youtube: { n: '롱폼·유튜브', d: '가로 16:9, 동영상 전체 길이, 깔끔한 자막', sw: ['#ef4444', '#111827'], layout: 'fill', trans: 'fade', look: 'natural', date: false, cap: 'clean', capAnim: 'fade', ratio: '16:9', clipFull: true,
+    title: { font: 'Pretendard Variable', weight: 900, color: '#ffffff', accent: '#ef4444', stroke: 0, shadow: 1, box: 'none', anim: 'rise' },
+    guide: '가로 영상(유튜브 일반 영상)용이에요. 동영상은 전체 길이로 들어가고, 장면 탭에서 시작·끝을 잘라 쓸 수 있어요. 긴 영상은 저장에 영상 길이의 절반~비슷한 시간이 걸려요.' },
   recap: { n: '요약 쇼츠', d: '위 제목 띠 + 가운데 사진 + 아래 자막', sw: ['#111118', '#ffd400'], card: ['#0b0b10', '#22222e'], layout: 'recap', trans: 'none', look: 'natural', date: false, cap: 'recap', capAnim: 'word',
     title: { font: 'Pretendard Variable', weight: 900, color: '#ffffff', accent: '#ffd400', stroke: 0, shadow: 0, box: 'none', anim: 'punch' },
     guide: '추천 순서: 위쪽 고정 제목 두 줄 → 첫 3초 훅 문구 → 장면마다 자막 한두 줄. 강조할 한 단어만 *별표*로 감싸면 노란색이 돼요.' },
@@ -122,7 +125,7 @@ const PACKS = {
 /* ---------- 상태 ---------- */
 const P = { pack: 'memory', ratio: '9:16', W: 1080, H: 1920, layout: 'blur', transition: 'fade', transDur: .4, photoSec: 3, clipSec: 5,
   hook: '', fixedTitle: '', brand: '', dateStamp: true, bg1: '#ff8a7a', bg2: '#ffc56b', look: 'warm', autoFix: true, safe: false,
-  origSound: true, music: { buf: null, name: '', vol: .6, duck: true, id: 0, lib: '' }, sfx: '', sfxVol: .7,
+  clipFull: false, origSound: true, music: { buf: null, name: '', vol: .6, duck: true, id: 0, lib: '' }, sfx: '', sfxVol: .7,
   mv: { on: false, beats: [], strong: [], bpm: 0, per: 2, pulse: true, flash: false, len: 'auto', start: 0, analyzing: false }, scenes: [] };
 let sel = null, selText = null;
 const PV = { playing: false, t: 0, startAt: 0, src: null };
@@ -155,7 +158,7 @@ const capY = () => geom(P.W, P.H).capY;
 /* ---------- 시간표 ---------- */
 function sceneDur(sc) {
   if (sc.kind === 'photo') return sc.dur || P.photoSec;
-  if (sc.kind === 'video') return Math.max(.3, Math.min(sc.dur || P.clipSec, sc.srcDur - sc.start));
+  if (sc.kind === 'video') return Math.max(.3, Math.min(sc.dur || (P.clipFull ? sc.srcDur : P.clipSec), sc.srcDur - sc.start));
   return sc.dur || 2.8;
 }
 const AUTO_TRANS = ['fade', 'slide', 'zoom', 'flash', 'blurzoom', 'circle', 'whip', 'spin', 'glitch', 'up'];
@@ -510,8 +513,12 @@ async function readVideo(f) {
   try { await once(v, 'loadedmetadata'); } catch (e) { v.remove(); URL.revokeObjectURL(url); throw e; }
   if (!isFinite(v.duration) || !v.videoWidth) { v.remove(); URL.revokeObjectURL(url); throw new Error('길이를 알 수 없는 영상'); }
   const sc = Object.assign(sceneBase(), { kind: 'video', name: f.name, url, vid: v, w: v.videoWidth, h: v.videoHeight, srcDur: v.duration, start: 0, date: new Date(f.lastModified), abuf: null, auto: null, thumb: '' });
-  if (f.size <= 500 * 1048576 && v.duration <= 900) { try { sc.abuf = await new OfflineAudioContext(2, 1, 48000).decodeAudioData(await f.arrayBuffer()); } catch (_) { sc.abuf = null; } } else sc.tooBig = true;
-  sc.start = highlight(sc.abuf, v.duration, P.clipSec);
+  sc.file = f; const isMp4 = /\.(mp4|m4v|mov)$/i.test(f.name) || /mp4|quicktime/.test(f.type);
+  if (f.size <= 300 * 1048576 && v.duration <= 600) { try { sc.abuf = await new OfflineAudioContext(2, 1, 48000).decodeAudioData(await f.arrayBuffer()); } catch (_) { sc.abuf = null; } }
+  else if (isMp4 && window.SCMedia) { try { const pr = await window.SCMedia.probe(f); if (pr.audio && pr.audio.ok) sc.longAudio = true; else if (pr.audio) sc.tooBig = true; } catch (_) { sc.tooBig = true; } }
+  else sc.tooBig = true;
+  sc.start = P.clipFull || sc.longAudio ? 0 : highlight(sc.abuf, v.duration, P.clipSec);
+  if (P.clipFull) sc.dur = v.duration;
   await seekVid(v, sc.start + .3);
   sc.auto = measure(v, v.videoWidth, v.videoHeight); sc.thumb = thumbOf(v, v.videoWidth, v.videoHeight);
   return sc;
@@ -555,8 +562,9 @@ let MIX = null;
 const AUD = (document.querySelector('meta[name="audio-base"]') || {}).content || 'audio/';
 const SFXC = new Map();
 async function loadSfx(file) { if (SFXC.has(file)) return SFXC.get(file); const job = (async () => { try { const r = await fetch(AUD + file); if (!r.ok) return null; return await new OfflineAudioContext(2, 1, 48000).decodeAudioData(await r.arrayBuffer()); } catch (_) { return null; } })(); SFXC.set(file, job); return job; }
-const needsAudio = (TL) => !!(P.music.buf || P.sfx && TL.items.length > 1 || P.origSound && TL.items.some((it) => it.sc.kind === 'video' && it.sc.abuf && it.sc.vol > 0));
+const needsAudio = (TL) => !!(P.music.buf || P.sfx && TL.items.length > 1 || P.origSound && TL.items.some((it) => it.sc.kind === 'video' && (it.sc.abuf || it.sc.longAudio) && it.sc.vol > 0));
 async function mixAudio(TL) {
+  if (isLongTL(TL)) return null;
   const sig = JSON.stringify([TL.items.map((it) => [it.sc.id, +it.t0.toFixed(3), +it.dur.toFixed(3), it.sc.start || 0, it.sc.vol, it.tr]), P.origSound, P.music.id, P.music.vol, P.music.duck, P.sfx, P.sfxVol, P.transition, TL.mv ? P.mv.start : -1]);
   if (MIX && MIX.sig === sig) return MIX.buf;
   const sr = 48000, len = Math.max(sr / 10, Math.ceil(TL.total * sr)), oc = new OfflineAudioContext(2, len, sr), voiced = [];
@@ -628,6 +636,47 @@ function syncMv() {
   if (P.music.buf) $('#mvStart').max = Math.max(0, P.music.buf.duration - 3).toFixed(1);
 }
 
+/* ---------- 긴 영상 소리: 필요한 구간만 풀어 쓰고, 소리 섞기도 구간별로 한다 ---------- */
+const LONG_MIX = 300; /* 이보다 긴 영상은 소리를 구간별로 섞는다 (메모리 절약) */
+const isLongTL = (TL) => TL.total > LONG_MIX || TL.items.some((it) => it.sc.longAudio && it.dur > 120);
+async function sceneAudio(sc, a, b) {
+  if (sc.abuf) return { buf: sc.abuf, at: 0 };
+  if (!sc.longAudio || !window.SCMedia) return null;
+  const c = sc._ac; if (c && c.a <= a + .01 && c.b >= b - .01) return { buf: c.buf, at: c.a };
+  const A = Math.max(0, a - .3), B = Math.min(sc.srcDur, b + .3);
+  try { const buf = await window.SCMedia.range48(sc.file, A, B); sc._ac = { a: A, b: B, buf }; return { buf, at: A }; } catch (e) { console.warn('scene audio', e); return null; }
+}
+function musicGainAt(TL, tau, voiced) { /* 배경음악 크기: 처음 살짝 커지고, 말소리 구간엔 30%로 줄고, 끝에서 작아진다 */
+  const v = P.music.vol; let g = v * (1 - Math.exp(-tau / .18));
+  if (P.music.duck) for (const [a, b] of voiced) { if (tau >= a - .25 && tau <= b + .25) { const d = Math.min(1, Math.min(tau - (a - .25), (b + .25) - tau) / .15); g *= 1 - .7 * Math.max(0, d); break; } }
+  const fo = Math.min(1.5, TL.total / 3); if (tau > TL.total - fo) g *= Math.max(0, (TL.total - tau) / fo);
+  return g;
+}
+async function mixWindow(TL, t0, t1) {
+  const sr = 48000, N = Math.max(1, Math.ceil((t1 - t0) * sr)), oc = new OfflineAudioContext(2, N, sr), voiced = [];
+  for (const it of TL.items) if (P.origSound && it.sc.kind === 'video' && (it.sc.abuf || it.sc.longAudio) && it.sc.vol > 0) voiced.push([it.t0, it.t1]);
+  const curve = (fn, a, b) => { const n = Math.max(2, Math.ceil((b - a) * 60)), c = new Float32Array(n); for (let i = 0; i < n; i++) c[i] = Math.max(0, fn(a + (b - a) * i / (n - 1))); return c; };
+  if (P.origSound) for (const it of TL.items) {
+    const sc = it.sc; if (sc.kind !== 'video' || !(sc.vol > 0) || it.t1 <= t0 || it.t0 >= t1) continue;
+    const a = Math.max(t0, it.t0), b = Math.min(t1, it.t1), srcA = sc.start + (a - it.t0), srcB = sc.start + (b - it.t0);
+    const au = await sceneAudio(sc, srcA, srcB); if (!au) continue;
+    const s = oc.createBufferSource(), g = oc.createGain(); s.buffer = au.buf;
+    const fi = Math.max(.06, it.ovIn || 0), gf = (tau) => sc.vol * Math.min(1, (tau - it.t0) / fi, (it.t1 - tau) / .12);
+    g.gain.setValueCurveAtTime(curve(gf, a, b), a - t0, Math.max(.01, b - a));
+    s.connect(g).connect(oc.destination); s.start(a - t0, Math.max(0, srcA - au.at), b - a + .02);
+  }
+  if (P.music.buf) {
+    const s = oc.createBufferSource(), g = oc.createGain(), D = P.music.buf.duration; s.buffer = P.music.buf; s.loop = true;
+    g.gain.setValueCurveAtTime(curve((tau) => musicGainAt(TL, tau, voiced), t0, t1), 0, t1 - t0);
+    s.connect(g).connect(oc.destination); s.start(0, (t0 % D));
+  }
+  const sfxBuf = P.sfx && P.sfx !== 'synth' ? await loadSfx(P.sfx) : null;
+  if (P.sfx) TL.items.slice(1).forEach((it) => { if (it.tr === 'none') return; const at = it.t0 + it.ovIn / 2 - (sfxBuf ? Math.min(.12, sfxBuf.duration / 3) : .05); if (at < t0 - .5 || at >= t1) return;
+    if (sfxBuf) { const s = oc.createBufferSource(), g = oc.createGain(); s.buffer = sfxBuf; g.gain.value = P.sfxVol; s.connect(g).connect(oc.destination); if (at >= t0) s.start(at - t0); else s.start(0, t0 - at); }
+    else { const nb = oc.createBuffer(1, sr * .5, sr), d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = hash(i * .37) * 2 - 1; const s = oc.createBufferSource(), f = oc.createBiquadFilter(), g = oc.createGain(), w = Math.max(0, at - t0); s.buffer = nb; f.type = 'bandpass'; f.Q.value = 1.2; f.frequency.setValueAtTime(400, w); f.frequency.exponentialRampToValueAtTime(3200, w + .18); f.frequency.exponentialRampToValueAtTime(700, w + .4); g.gain.setValueAtTime(0, w); g.gain.linearRampToValueAtTime(.28 * P.sfxVol, w + .12); g.gain.linearRampToValueAtTime(0, w + .42); s.connect(f).connect(g).connect(oc.destination); s.start(w); } });
+  return oc.startRendering();
+}
+
 /* ---------- 미리보기 ---------- */
 let AC = null;
 async function seekVideos(TL, t) {
@@ -660,21 +709,36 @@ async function play() {
     $('#play').textContent = '준비 중…'; await ensureFonts(1200);
     AC = AC || new AudioContext();
     await Promise.race([AC.resume(), new Promise((r) => setTimeout(r, 800))]);
-    try { buf = await mixAudio(TL); } catch (e) { console.warn('mix', e); }
+    const long = isLongTL(TL);
+    if (!long) { try { buf = await mixAudio(TL); } catch (e) { console.warn('mix', e); } }
     /* 소리 장치가 돌면 소리 시계에, 아니면 화면 시계에 맞춘다 */
     const live = AC.state === 'running'; now = live ? () => AC.currentTime : () => performance.now() / 1000;
-    if (buf && live) { PV.src = AC.createBufferSource(); PV.src.buffer = buf; PV.src.connect(AC.destination); PV.src.start(0, PV.t); }
-    PV.startAt = now() - PV.t; PV.playing = true; $('#play').textContent = '❚❚ 멈춤';
+    PV.srcs = []; PV.long = long && live && needsAudio(TL);
+    if (PV.long) {
+      const w0 = PV.t, w1 = Math.min(TL.total, w0 + 40), first = await mixWindow(TL, w0, w1), at = AC.currentTime + .06;
+      const s = AC.createBufferSource(); s.buffer = first; s.connect(AC.destination); s.start(at); PV.srcs.push(s);
+      PV.startAt = at - w0; PV.winEnd = w1; PV.winBusy = false;
+    } else {
+      if (buf && live) { PV.src = AC.createBufferSource(); PV.src.buffer = buf; PV.src.connect(AC.destination); PV.src.start(0, PV.t); }
+      PV.startAt = now() - PV.t;
+    }
+    PV.playing = true; $('#play').textContent = '❚❚ 멈춤';
   } catch (e) { console.error(e); $('#play').textContent = '▶ 미리보기'; return; } finally { PV.starting = false; }
   const loop = () => {
     if (!PV.playing) return; const t = now() - PV.startAt;
     if (t >= TL.total) { stop(); PV.t = 0; redraw(); return; }
-    PV.t = t; syncVideos(TL, t); renderFrame(RV, t, TL); transport(TL); requestAnimationFrame(loop);
+    PV.t = t; syncVideos(TL, t); renderFrame(RV, t, TL); transport(TL);
+    if (PV.long && !PV.winBusy && PV.winEnd < TL.total && t > PV.winEnd - 15) { /* 다음 40초 소리를 미리 섞어 이어 붙인다 */
+      PV.winBusy = true; const a = PV.winEnd, b = Math.min(TL.total, a + 40);
+      mixWindow(TL, a, b).then((bf) => { if (!PV.playing) return; const s = AC.createBufferSource(); s.buffer = bf; s.connect(AC.destination); s.start(Math.max(AC.currentTime, PV.startAt + a)); PV.srcs.push(s); PV.winEnd = b; }).catch((e) => console.warn('win', e)).finally(() => { PV.winBusy = false; });
+    }
+    requestAnimationFrame(loop);
   };
   requestAnimationFrame(loop);
 }
 function stop() {
   if (PV.src) { try { PV.src.stop(); } catch (_) {} PV.src = null; }
+  for (const s of PV.srcs || []) { try { s.stop(); } catch (_) {} } PV.srcs = []; PV.long = false;
   PV.playing = false; $('#play').textContent = '▶ 미리보기';
   for (const sc of P.scenes) if (sc.kind === 'video' && !sc.vid.paused) sc.vid.pause();
 }
@@ -706,15 +770,25 @@ async function exportVideo(opts) {
     await ensureFonts();
     const TL = timeline(), q = +$('#res').value / 1080, W = Math.round(P.W * q / 2) * 2, H = Math.round(P.H * q / 2) * 2;
     const cv = mk(W, H), R = { ctx: cv.getContext('2d'), W, H, cA: mk(W, H), cB: mk(W, H), bgc: mk(8, 8), preview: false };
-    const { Muxer, ArrayBufferTarget } = await import('https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/+esm');
+    const { Muxer, ArrayBufferTarget, FileSystemWritableFileStreamTarget } = await import('https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/+esm');
     let vcfg = null;
     for (const codec of ['avc1.640028', 'avc1.4d0028', 'avc1.42002a', 'avc1.640033']) { const c = { codec, width: W, height: H, bitrate: q >= 1 ? 8e6 : 5e6, framerate: FPS, avc: { format: 'avc' } }; try { if ((await VideoEncoder.isConfigSupported(c)).supported) { vcfg = c; break; } } catch (_) {} }
     if (!vcfg) throw new Error('이 기기는 MP4(H.264) 저장을 지원하지 않아요.');
-    let mix = null, acfg = null, acodec = null;
-    if (needsAudio(TL)) { try { mix = await mixAudio(TL); } catch (e) { console.warn('mix', e); } }
+    let mix = null, acfg = null, acodec = null; const long = isLongTL(TL);
+    if (TL.total > 3600 + 1) throw new Error('한 편은 60분까지 저장할 수 있어요. 장면을 나눠 주세요.');
+    if (needsAudio(TL)) { if (long) mix = { long: true }; else { try { mix = await mixAudio(TL); } catch (e) { console.warn('mix', e); } } }
     if (mix && window.AudioEncoder) for (const [codec, mc] of [['mp4a.40.2', 'aac'], ['opus', 'opus']]) { const c = { codec, sampleRate: 48000, numberOfChannels: 2, bitrate: 160000 }; try { if ((await AudioEncoder.isConfigSupported(c)).supported) { acfg = c; acodec = mc; break; } } catch (_) {} }
-    const target = new ArrayBufferTarget();
-    const muxer = new Muxer({ target, video: { codec: 'avc', width: W, height: H, frameRate: FPS }, audio: acfg ? { codec: acodec, sampleRate: 48000, numberOfChannels: 2 } : undefined, fastStart: 'in-memory', firstTimestampBehavior: 'offset' });
+    /* 긴 영상은 메모리 대신 브라우저 저장공간(디스크)에 바로 써 내려간다 */
+    let target, fh = null, ws = null;
+    if (long) { const root = await navigator.storage.getDirectory(); for await (const [n] of root.entries()) if (/^export-/.test(n)) { try { await root.removeEntry(n); } catch (_) {} }
+      fh = await root.getFileHandle('export-' + Date.now() + '.mp4', { create: true }); ws = await fh.createWritable(); target = new FileSystemWritableFileStreamTarget(ws); }
+    else target = new ArrayBufferTarget();
+    const muxer = new Muxer({ target, video: { codec: 'avc', width: W, height: H, frameRate: FPS }, audio: acfg ? { codec: acodec, sampleRate: 48000, numberOfChannels: 2 } : undefined, fastStart: long ? false : 'in-memory', firstTimestampBehavior: 'offset' });
+    let aDone = 0, aErrL = null; const aencL = long && acfg ? new AudioEncoder({ output: (c, m) => muxer.addAudioChunk(c, m), error: (e) => { aErrL = e; } }) : null; if (aencL) aencL.configure(acfg);
+    const pushAudio = async (upTo) => { /* 긴 영상: 30초씩 섞어서 바로 넣는다 */
+      while (aencL && aDone < upTo - 1e-6) { const b = Math.min(TL.total, aDone + 30), m = await mixWindow(TL, aDone, b), sr = 48000, ch0 = m.getChannelData(0), ch1 = m.getChannelData(1), base = Math.round(aDone * sr), end = Math.round((b - aDone) * sr);
+        for (let off = 0; off < end; off += 1024) { const n = Math.min(1024, end - off), data = new Float32Array(n * 2); data.set(ch0.subarray(off, off + n), 0); data.set(ch1.subarray(off, off + n), n); const ad = new AudioData({ format: 'f32-planar', sampleRate: sr, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round((base + off) / sr * 1e6), data }); aencL.encode(ad); ad.close(); if (aencL.encodeQueueSize > 50) await tick(); if (aErrL) throw aErrL; }
+        aDone = b; } };
     let encErr = null;
     venc = new VideoEncoder({ output: (c, m) => muxer.addVideoChunk(c, m), error: (e) => { encErr = e; } }); venc.configure(vcfg);
     const N = Math.max(1, Math.round(TL.total * FPS)), started = performance.now();
@@ -723,10 +797,12 @@ async function exportVideo(opts) {
       const t = f / FPS; await seekVideos(TL, t); renderFrame(R, t, TL);
       const vf = new VideoFrame(cv, { timestamp: Math.round(f * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
       venc.encode(vf, { keyFrame: f % (FPS * 2) === 0 }); vf.close();
+      if (aencL && t + 1 / FPS > aDone) await pushAudio(Math.min(TL.total, aDone + 30));
       while (venc.encodeQueueSize > 8) { await tick(); if (encErr) throw encErr; }
       if (f % 3 === 0) { bar.style.width = (f / N * 94).toFixed(1) + '%'; const el = (performance.now() - started) / 1000, left = el / (f + 1) * (N - f - 1); ptxt.textContent = `장면을 그리는 중 ${Math.round(f / N * 100)}% · 남은 시간 약 ${fmt(left)}`; await tick(); }
     }
-    if (acfg) {
+    if (aencL) { await pushAudio(TL.total); await aencL.flush(); aencL.close(); if (aErrL) throw aErrL; }
+    else if (acfg) {
       ptxt.textContent = '소리를 넣는 중…'; let aErr = null;
       aenc = new AudioEncoder({ output: (c, m) => muxer.addAudioChunk(c, m), error: (e) => { aErr = e; } }); aenc.configure(acfg);
       const sr = 48000, end = Math.min(mix.length, Math.round(N / FPS * sr)), ch0 = mix.getChannelData(0), ch1 = mix.numberOfChannels > 1 ? mix.getChannelData(1) : ch0;
@@ -736,7 +812,8 @@ async function exportVideo(opts) {
     }
     await venc.flush(); venc.close(); venc = null; if (encErr) throw encErr;
     muxer.finalize();
-    const blob = new Blob([target.buffer], { type: 'video/mp4' }), tcard = P.scenes.find((s) => s.role === 'title');
+    let blob; if (long) { await ws.close(); blob = await fh.getFile(); } else blob = new Blob([target.buffer], { type: 'video/mp4' });
+    const tcard = P.scenes.find((s) => s.role === 'title');
     const name = `쏭컷_${((tcard && tcard.texts[0] && tcard.texts[0].text) || pack().n).replace(/\*/g, '').replace(/[\\/:*?"<>|\n]/g, '').trim().slice(0, 30) || '영상'}.mp4`;
     EX.last = { blob, name, frames: N, W, H, audio: acodec || 'none', seconds: N / FPS, took: (performance.now() - started) / 1000 };
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
@@ -808,7 +885,7 @@ const setVal = (id, v) => { const el = $('#' + id); if (el.type === 'checkbox') 
 function syncProj() {
   $$('#packs .pack').forEach((b) => b.classList.toggle('on', b.dataset.k === P.pack)); $('#packGuide').textContent = pack().guide;
   setSeg('ratio', P.ratio); setSeg('layout', P.layout); setVal('trans', P.transition); setVal('transDur', P.transDur); $('#transDurV').textContent = P.transDur.toFixed(1) + '초';
-  setVal('photoSec', P.photoSec); $('#photoSecV').textContent = P.photoSec + '초'; setVal('clipSec', P.clipSec); $('#clipSecV').textContent = P.clipSec + '초';
+  setVal('clipFull', P.clipFull); setVal('photoSec', P.photoSec); $('#photoSecV').textContent = P.photoSec + '초'; setVal('clipSec', P.clipSec); $('#clipSecV').textContent = P.clipSec + '초';
   const tc = P.scenes.find((s) => s.role === 'title'), ec = P.scenes.find((s) => s.role === 'ending');
   if (document.activeElement !== $('#title')) setVal('title', tc ? tc.texts[0].text : ''); if (document.activeElement !== $('#ending')) setVal('ending', ec ? ec.texts[0].text : '');
   setVal('hook', P.hook); setVal('fixedTitle', P.fixedTitle); setVal('brand', P.brand); setVal('dateStamp', P.dateStamp); setVal('bg1', P.bg1); setVal('bg2', P.bg2); setVal('safe', P.safe);
@@ -819,9 +896,10 @@ const ADJ = { aBright: 'bright', aContrast: 'contrast', aSat: 'sat', aWarm: 'war
 function syncScene() {
   const sc = scene(); $('#scEmpty').classList.toggle('hidden', !!sc); $('#scBody').classList.toggle('hidden', !sc); if (!sc) return;
   const i = P.scenes.indexOf(sc) + 1; $('#scTitle').textContent = `${i}번 장면 · ${sc.kind === 'video' ? '동영상' : sc.kind === 'card' ? '글자 카드' : '사진'}`;
-  const d = sceneDur(sc); $('#scDur').max = sc.kind === 'video' ? Math.max(1, Math.min(60, Math.floor(sc.srcDur * 2) / 2)) : 15; setVal('scDur', d); $('#scDurV').textContent = d.toFixed(1) + '초';
+  const d = sceneDur(sc); $('#scDur').max = sc.kind === 'video' ? Math.max(1, Math.floor((sc.srcDur - sc.start) * 2) / 2) : 15; $('#scDur').step = sc.kind === 'video' && sc.srcDur > 120 ? 1 : .5; setVal('scDur', d); $('#scDurV').textContent = d >= 60 ? fmt(d) : d.toFixed(1) + '초';
+  if (sc.kind === 'video') setVal('scEnd', (sc.start + d).toFixed(1));
   $('#scVideo').classList.toggle('hidden', sc.kind !== 'video'); $('#scPhoto').classList.toggle('hidden', sc.kind !== 'photo'); $('#scCard').classList.toggle('hidden', sc.kind !== 'card'); $('#scMedia').classList.toggle('hidden', sc.kind === 'card');
-  if (sc.kind === 'video') { setVal('scStart', sc.start.toFixed(1)); $('#scStart').max = Math.max(0, sc.srcDur - .5).toFixed(1); setVal('scVol', sc.vol); $('#scVolV').textContent = Math.round(sc.vol * 100) + '%'; $('#scVideoInfo').textContent = `전체 ${sc.srcDur.toFixed(1)}초 중 ${sc.start.toFixed(1)}초부터 씁니다.${sc.abuf ? '' : ' (이 동영상은 소리를 읽지 못했어요)'}`; }
+  if (sc.kind === 'video') { setVal('scStart', sc.start.toFixed(1)); $('#scStart').max = Math.max(0, sc.srcDur - .5).toFixed(1); setVal('scVol', sc.vol); $('#scVolV').textContent = Math.round(sc.vol * 100) + '%'; $('#scVideoInfo').textContent = `전체 ${fmt(sc.srcDur)} 중 ${fmt(sc.start)}부터 ${fmt(sc.start + sceneDur(sc))}까지 씁니다.${sc.abuf || sc.longAudio ? '' : ' (이 동영상은 소리를 읽지 못했어요)'}`; }
   if (sc.kind === 'photo') setVal('scMotion', sc.motion);
   setVal('scTrans', sc.trans || ''); $('#scTransWrap').classList.toggle('hidden', P.scenes.indexOf(sc) === 0 && !P.mv.on);
   if (sc.kind === 'video') setVal('scVMotion', sc.motion === 'shake' || sc.motion === 'pulse' ? sc.motion : 'none');
@@ -855,7 +933,9 @@ function syncAll() { syncProj(); syncScene(); syncText(); }
 
 /* 템플릿 */
 function applyPack(key, quiet) {
-  const p = PACKS[key]; P.pack = key; P.layout = p.layout; P.transition = p.trans; if (p.mv && !P.mv.on) { P.mv.on = true; if (P.music.buf && !P.mv.beats.length) setMusic(P.music.buf, P.music.name, P.music.lib); } P.look = p.look; P.dateStamp = !!p.date; P.bg1 = p.sw[0]; P.bg2 = p.sw[1];
+  const p = PACKS[key]; P.pack = key; P.layout = p.layout; P.transition = p.trans;
+  if (p.ratio && typeof setRatio === 'function' && P.ratio !== p.ratio) setRatio(p.ratio);
+  if (p.clipFull && !P.clipFull) { P.clipFull = true; for (const sc of P.scenes) if (sc.kind === 'video') { sc.start = 0; sc.dur = sc.srcDur; } } if (p.mv && !P.mv.on) { P.mv.on = true; if (P.music.buf && !P.mv.beats.length) setMusic(P.music.buf, P.music.name, P.music.lib); } P.look = p.look; P.dateStamp = !!p.date; P.bg1 = p.sw[0]; P.bg2 = p.sw[1];
   if (key === 'recap') { P.bg1 = '#22222e'; P.bg2 = '#0b0b10'; }
   for (const sc of P.scenes) for (const L of sc.texts) {
     if (L.role === 'title') Object.assign(L, p.title);
@@ -903,7 +983,9 @@ const packsEl = $('#packs');
 for (const [k, p] of Object.entries(PACKS)) { const b = document.createElement('button'); b.className = 'pack'; b.dataset.k = k; b.innerHTML = `<b><i style="background:linear-gradient(135deg,${p.sw[0]},${p.sw[1]})"></i>${p.n}</b><span>${p.d}</span>`; b.onclick = () => applyPack(k); packsEl.appendChild(b); }
 const segClick = (id, fn) => $$('#' + id + ' button').forEach((b) => b.addEventListener('click', () => fn(b.dataset.v)));
 function recap() { for (const sc of P.scenes) for (const L of sc.texts) if (L.role === 'caption' && !L.moved) L.y = capY(); }
-segClick('ratio', (v) => { P.ratio = v; [P.W, P.H] = RATIOS[v]; for (const c of [view, RV.cA, RV.cB]) { c.width = P.W; c.height = P.H; } RV.W = P.W; RV.H = P.H; recap(); syncProj(); changed(); });
+function setRatio(v) { P.ratio = v; [P.W, P.H] = RATIOS[v]; for (const c of [view, RV.cA, RV.cB]) { c.width = P.W; c.height = P.H; } RV.W = P.W; RV.H = P.H; recap(); }
+segClick('ratio', (v) => { setRatio(v); syncProj(); changed(); });
+on('clipFull', 'change', (e) => { P.clipFull = e.target.checked; for (const sc of P.scenes) if (sc.kind === 'video') { if (P.clipFull) { sc.start = 0; sc.dur = sc.srcDur; } else { sc.dur = null; } } syncScene(); changed(); toast(P.clipFull ? '동영상을 전체 길이로 넣었어요. 장면 탭에서 시작·끝을 잘라 쓸 수 있어요.' : `동영상을 ${P.clipSec}초 하이라이트로 줄였어요.`); });
 segClick('layout', (v) => { P.layout = v; recap(); syncProj(); changed(); });
 on('trans', 'change', (e) => { P.transition = e.target.value; changed(); });
 on('transDur', 'input', (e) => { P.transDur = +e.target.value; $('#transDurV').textContent = P.transDur.toFixed(1) + '초'; changed(); });
@@ -934,7 +1016,9 @@ on('quickCap', 'input', (e) => { const sc = scene(); if (!sc || sc.kind === 'car
   syncText(); changed(); fontsSoon(); });
 
 /* 장면 · 보정 */
-on('scDur', 'input', (e) => { const sc = scene(); if (!sc) return; sc.dur = +e.target.value; $('#scDurV').textContent = sceneDur(sc).toFixed(1) + '초'; changed(); });
+on('scDur', 'input', (e) => { const sc = scene(); if (!sc) return; sc.dur = +e.target.value; const d = sceneDur(sc); $('#scDurV').textContent = d >= 60 ? fmt(d) : d.toFixed(1) + '초'; if (sc.kind === 'video') setVal('scEnd', (sc.start + d).toFixed(1)); changed(); });
+on('scEnd', 'change', (e) => { const sc = scene(); if (!sc || sc.kind !== 'video') return; const end = clamp(+e.target.value || 0, sc.start + .3, sc.srcDur); sc.dur = end - sc.start; syncScene(); changed(); });
+on('scFull', 'click', () => { const sc = scene(); if (!sc || sc.kind !== 'video') return; sc.start = 0; sc.dur = sc.srcDur; syncScene(); changed(); toast(`이 동영상을 처음부터 끝까지(${fmt(sc.srcDur)}) 넣었어요.`); });
 on('scStart', 'change', (e) => { const sc = scene(); if (!sc) return; sc.start = clamp(+e.target.value || 0, 0, Math.max(0, sc.srcDur - .5)); syncScene(); changed(); });
 on('scVol', 'input', (e) => { const sc = scene(); if (!sc) return; sc.vol = +e.target.value; $('#scVolV').textContent = Math.round(sc.vol * 100) + '%'; });
 on('scAuto', 'click', () => { const sc = scene(); if (!sc) return; if (!sc.abuf) return toast('이 동영상은 소리를 읽지 못해 가운데 구간을 씁니다.'); sc.start = highlight(sc.abuf, sc.srcDur, sceneDur(sc)); syncScene(); changed(); toast(`${sc.start.toFixed(1)}초부터가 소리가 가장 활발해요.`); });
@@ -1037,6 +1121,11 @@ view.addEventListener('pointerup', endDrag); view.addEventListener('pointercance
 
 /* ---------- 시작 ---------- */
 window.toast = toast;
+(() => { /* 저장이 안 되는 브라우저는 처음부터 알려 준다 */
+  const ok = !!(window.VideoEncoder && window.VideoFrame), aok = !!window.AudioEncoder, mob = /iphone|ipad|android/i.test(navigator.userAgent), el = $('#envWarn'); if (!el) return;
+  const msg = !ok ? '이 브라우저에서는 MP4 저장이 되지 않아요. PC의 크롬이나 엣지에서 열어 주세요. (편집과 미리보기는 할 수 있어요)' : !aok ? '이 브라우저는 소리 넣기를 지원하지 않아 소리 없이 저장될 수 있어요. PC 크롬·엣지를 권해요.' : mob ? '휴대폰에서는 1~3분 쇼츠까지 권해요. 긴 영상 편집·저장은 PC 크롬·엣지가 빠르고 안정적이에요.' : '';
+  if (msg) { el.textContent = msg; el.classList.remove('hidden'); }
+})();
 applyPack('memory', true);
 syncAll(); loadFontPreviews(); loadLibrary();
 document.fonts.load('900 48px "Pretendard Variable"', '쏭컷').catch(() => {});

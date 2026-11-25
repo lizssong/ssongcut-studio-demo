@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="studio.css?v=8">
-<link rel="stylesheet" href="pay.css?v=8">
+<link rel="stylesheet" href="studio.css?v=9">
+<link rel="stylesheet" href="pay.css?v=9">
 </head>
 <body>
 
@@ -33,6 +33,7 @@
     <div class="trust"><span><i>✓</i>편집·미리보기는 로그인 없이</span><span><i>✓</i>파일은 내 브라우저 안에서만 처리</span><span><i>✓</i>템플릿 7종 · 전환 13종 · 상업용 배경음악</span></div>
   </div>
 
+  <div id="envWarn" class="envwarn hidden" role="status"></div>
   <label id="drop" class="drop">
     <input id="files" type="file" accept="image/*,video/*" multiple hidden>
     <h3>사진·동영상을 한꺼번에 끌어다 놓으세요</h3>
@@ -96,6 +97,7 @@
           <div class="field"><label for="photoSec">사진 한 장 <span id="photoSecV">3초</span></label><input id="photoSec" type="range" min="1.5" max="8" step="0.5" value="3"></div>
           <div class="field"><label for="clipSec">동영상 한 개 <span id="clipSecV">5초</span></label><input id="clipSec" type="range" min="2" max="30" step="1" value="5"></div>
         </div>
+        <label class="check"><input id="clipFull" type="checkbox"> 동영상은 전체 길이로 넣기 (롱폼·유튜브 편집)</label>
 
         <h3>이야기</h3>
         <div class="field"><label for="title">맨 앞 제목 카드</label><input id="title" type="text" maxlength="40" placeholder="비워 두면 제목 카드 없이 시작해요"></div>
@@ -123,8 +125,10 @@
           <div id="scVideo" class="hidden">
             <div class="two">
               <div class="field"><label for="scStart">시작 지점(초)</label><input id="scStart" type="number" min="0" step="0.5"></div>
-              <div class="field"><label for="scVol">원래 소리 <span id="scVolV">100%</span></label><input id="scVol" type="range" min="0" max="1.5" step="0.05" value="1"></div>
+              <div class="field"><label for="scEnd">끝 지점(초)</label><input id="scEnd" type="number" min="0" step="0.5"></div>
             </div>
+            <button id="scFull" class="btn small" style="width:100%;margin-bottom:10px">이 동영상 처음부터 끝까지 쓰기</button>
+            <div class="field"><label for="scVol">원래 소리 <span id="scVolV">100%</span></label><input id="scVol" type="range" min="0" max="1.5" step="0.05" value="1"></div>
             <p class="hint" id="scVideoInfo"></p>
             <button id="scAuto" class="btn small" style="margin-bottom:12px">소리가 가장 활발한 구간 다시 찾기</button>
             <div class="field"><label for="scVMotion">화면 움직임</label><select id="scVMotion"><option value="none">없음</option><option value="shake">손떨림 (생동감)</option><option value="pulse">두근두근</option></select></div>
@@ -256,7 +260,7 @@
         <button id="export" class="btn primary" style="width:100%">영상 만들기</button>
         <div id="prog" class="hidden" style="margin-top:12px"><div class="progress"><i id="bar"></i></div><p id="progText" class="muted" style="font-size:13px;margin:8px 0 0"></p>
           <button id="cancel" class="btn small" style="margin-top:8px">그만두기</button></div>
-        <p class="hint" style="margin-top:12px">PC 크롬·엣지를 권해요. 사진만 있으면 금방 끝나고, 동영상이 많으면 영상 길이의 2~3배쯤 걸릴 수 있어요. 저장하는 동안 이 창을 닫지 마세요.</p>
+        <p class="hint" style="margin-top:12px" id="expHint">PC 크롬·엣지에서 가장 빠르고 안정적이에요. 한 편은 최대 60분까지 저장할 수 있고, 5분이 넘는 영상은 메모리 대신 디스크에 바로 써서 저장해요. 저장에는 보통 영상 길이의 0.5~2배 시간이 걸려요. 저장 중에는 창을 닫지 마세요. 처음 저장할 때 1건이 차감되고, 같은 작업을 다시 저장할 때는 차감되지 않아요.</p>
       </div>
     </aside>
   </div>
@@ -273,8 +277,9 @@
   <div class="row"><button id="qaClose" class="btn small primary">닫기</button><button id="qaSave" class="btn small">이미지로 저장</button></div>
 </div></div>
 
-<script src="studio.js?v=8"></script>
-<script type="module" src="pay.js?v=8"></script>
+<script src="media.js?v=9"></script>
+<script src="studio.js?v=9"></script>
+<script type="module" src="pay.js?v=9"></script>
 <script>if('serviceWorker' in navigator){addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}</script>
 </body>
 </html>
