@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>쏭컷 공백 컷편집 | 말하는 영상의 공백을 0초로</title>
+<meta name="description" content="말하는 영상에서 멈춘 자리, 숨 고르는 자리를 소리 크기로 찾아 자동으로 잘라 내고 쇼츠 화면과 제목·자막까지 입혀요. 영상은 내 브라우저 안에서만 처리됩니다.">
+<meta property="og:title" content="쏭컷 공백 컷편집">
+<meta property="og:description" content="말하는 영상의 공백을 자동으로 잘라 쇼츠로.">
+<meta name="theme-color" content="#08080d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="studio.css?v=2">
+</head>
+<body>
+
+<nav class="nav"><div class="wrap">
+  <a class="logo" href="./"><span class="logo-mark"><svg viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z" fill="#fff"/></svg></span>쏭컷 AI<small>STUDIO</small></a>
+  <div class="modes"><a href="./">✦ AI 숏츠</a><a href="studio.html">🎞 사진·영상</a><a class="on" href="cut.html">✂ 공백 컷</a></div>
+  <span class="badge">BETA</span>
+</div></nav>
+
+<main class="wrap">
+  <div class="head">
+    <h1>말하는 영상, <span class="grad">공백 0초</span>로</h1>
+    <p>「음…」 하고 멈춘 자리, 숨 고르는 자리를 소리 크기로 찾아 자동으로 잘라 내요. 쇼츠 화면으로 바꾸고 첫 화면 제목과 자막까지 입힙니다.</p>
+    <div class="trust"><span><i>✓</i>로그인 없이 무료</span><span><i>✓</i>영상은 내 브라우저 안에서만 처리</span><span><i>✓</i>자를 곳을 직접 고칠 수 있어요</span></div>
+  </div>
+
+  <div class="editor">
+    <div>
+      <label id="drop" class="drop" style="margin-top:0">
+        <input id="file" type="file" accept="video/*,audio/*" hidden>
+        <h3>영상을 여기로 끌어다 놓으세요</h3>
+        <p>mp4 · webm · mov · 10분 안쪽 영상을 권해요 (긴 영상은 메모리를 많이 써요)</p>
+        <span class="btn">내 PC에서 영상 선택</span>
+      </label>
+
+      <div id="work" class="hidden">
+        <div class="stage"><canvas id="view" width="1080" height="1920"></canvas></div>
+        <canvas id="timeline" class="timeline" aria-label="파형 타임라인. 빨간 칸이 잘릴 공백입니다. 아래 띠의 칸을 누르면 살리거나 자를 수 있습니다."></canvas>
+        <p class="hint" style="margin:8px 0 0">위쪽 파형을 누르면 그 자리로 이동 · <b>아래 띠</b>의 칸을 누르면 살리기(초록) ↔ 자르기(빨강)가 바뀌어요</p>
+        <div class="row" style="margin-top:12px">
+          <button id="play" class="btn primary small">▶ 미리보기</button>
+          <label class="check" style="margin:0"><input id="skip" type="checkbox" checked> 자른 결과로 보기</label>
+          <span id="clock" class="clock" style="margin-left:auto">0:00.0</span>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="card">
+        <h3>① 공백 자르기</h3>
+        <div class="stats">
+          <div><b id="sBefore">-</b><span>원래 길이</span></div>
+          <div><b id="sAfter">-</b><span>자른 뒤</span></div>
+          <div><b id="sPct">-</b><span>줄어듦</span></div>
+        </div>
+        <div class="field"><label for="db">공백으로 볼 소리 크기 <span id="dbV">-35 dB</span></label><input id="db" type="range" min="-60" max="-15" step="1" value="-35"></div>
+        <div class="field"><label for="min">이보다 긴 공백만 <span id="minV">0.40초</span></label><input id="min" type="range" min="0.1" max="2" step="0.05" value="0.4"></div>
+        <div class="field"><label for="pad">말 앞뒤 여유 <span id="padV">0.12초</span></label><input id="pad" type="range" min="0" max="0.5" step="0.01" value="0.12"></div>
+        <p class="hint" style="margin:0">말끝이 잘리면 <b>여유</b>를 늘리고, 너무 많이 잘리면 <b>소리 크기</b>를 왼쪽으로 내리세요.</p>
+      </div>
+
+      <div class="card">
+        <h3>② 화면과 글자</h3>
+        <div class="field"><label for="layout">화면 비율</label>
+          <select id="layout"><option value="shorts">쇼츠 9:16 (1080×1920)</option><option value="square">정사각 1:1 (1080×1080)</option><option value="original">원본 그대로</option></select></div>
+        <div class="field"><label for="title">첫 화면 제목 (후킹 문구)</label><input id="title" type="text" placeholder="예: 캔바 AI 3분 정리" maxlength="40"></div>
+        <div class="field"><label for="font">글꼴</label>
+          <select id="font"><option value="Pretendard Variable">프리텐다드 (기본)</option><option value="Noto Sans KR">노토 산스</option><option value="Black Han Sans">검은고딕</option><option value="Do Hyeon">도현</option><option value="Jua">주아</option><option value="Bagel Fat One">베이글팻</option><option value="Noto Serif KR">노토 세리프</option><option value="Nanum Pen Script">나눔 펜글씨</option><option value="Gaegu">개구</option></select></div>
+        <div class="field"><label for="titleSec">제목이 떠 있는 시간 <span id="titleSecV">3초</span></label><input id="titleSec" type="range" min="1" max="10" step="1" value="3"></div>
+        <div class="field"><label for="hook">첫 3초 후킹 (이 시간부터 3초를 맨 앞에)</label><input id="hook" type="number" min="0" step="0.5" placeholder="비우면 안 씀 (예: 12)"></div>
+        <div class="field"><label for="srt">자막 (.srt · 원본 영상 기준 시간)</label><input id="srt" type="file" accept=".srt,text/plain"></div>
+        <p id="srtInfo" class="hint" style="margin:0">여기서는 자막을 자동으로 받아 적지 않아요. 받아쓰기까지 필요하면 <a href="./">긴 영상 → AI 숏츠</a>를 써 보세요.</p>
+      </div>
+
+      <div class="card">
+        <h3>③ 내보내기</h3>
+        <button id="export" class="btn primary" style="width:100%" disabled>영상 내보내기</button>
+        <div id="prog" class="hidden" style="margin-top:10px"><div class="progress"><i id="bar"></i></div><p id="progText" class="muted" style="font-size:13px;margin:6px 0 0"></p></div>
+        <p class="hint" style="margin-top:10px">영상 길이만큼(1배속) 걸려요. 그동안 이 탭을 앞에 두세요. 크롬은 mp4, 그 밖의 브라우저는 webm으로 받아요.</p>
+        <div class="row">
+          <button id="json" class="btn small" disabled>구간 JSON</button>
+          <button id="ffcmd" class="btn small" disabled>ffmpeg 명령 복사</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="foot">© 2026 위드AI솔루션 · 쏭컷 AI STUDIO BETA · 대표 송민경(쏭리즈) · 문의 mkssong22@gmail.com · <a href="https://litt.ly/ssongliz" target="_blank" rel="noopener">litt.ly/ssongliz ↗</a><br>공백은 소리 크기로만 찾아요. 배경음악이 깔린 영상은 공백이 잘 안 잡힐 수 있어요. 내가 만들었거나 사용 권한이 있는 영상만 이용해 주세요.</div>
+</main>
+<video id="src" playsinline preload="auto" class="hidden"></video>
+<script src="media.js?v=9"></script>
+<script src="cut.js?v=9"></script>
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}</script>
+</body>
+</html>
