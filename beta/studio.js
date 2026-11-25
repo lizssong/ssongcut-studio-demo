@@ -521,8 +521,9 @@ async function readVideo(f) {
 }
 async function addFiles(files) {
   const aud = [...files].find((f) => /^audio\//.test(f.type) || /\.(mp3|m4a|wav|aac|ogg|flac)$/i.test(f.name));
-  if (aud) { await loadMusicFile(aud); if (!P.scenes.length) { toast('음악을 넣었어요. 이제 사진·영상을 넣어 주세요.', 4000); return; } }
-  files = [...files].filter((f) => /^(image|video)\//.test(f.type) || /\.(heic|heif|mov|mp4|m4v|webm|jpe?g|png|webp|gif)$/i.test(f.name));
+  const media = [...files].filter((f) => f !== aud);
+  if (aud) { await loadMusicFile(aud); if (!P.scenes.length && !media.length) { toast('음악을 넣었어요. 이제 사진·영상을 넣어 주세요.', 4000); return; } }
+  files = media.filter((f) => /^(image|video)\//.test(f.type) || /\.(heic|heif|mov|mp4|m4v|webm|jpe?g|png|webp|gif)$/i.test(f.name));
   if (!files.length) return;
   const first = !P.scenes.some((s) => s.kind !== 'card'), h3 = $('#drop h3'), fresh = [], bad = [];
   for (const [i, f] of files.entries()) {
@@ -607,7 +608,8 @@ async function analyzeBeats(buf) {
   for (let k = 0; k < steps; k++) { const ph = period * k / steps; let s = 0; for (let t = ph; t < buf.duration; t += period) { const i = Math.round(t * fr); s += on[i] || 0; } if (s > bestS) { bestS = s; bestPh = ph; } }
   const beats = []; for (let t = bestPh; t < buf.duration - .05; t += period) { /* 주변 ±40ms 안의 가장 센 지점으로 살짝 맞춘다 */ const c = Math.round(t * fr), r = Math.round(fr * .04); let bi = c, bv = -1; for (let i = c - r; i <= c + r; i++) if (i > 0 && i < n && on[i] > bv) { bv = on[i]; bi = i; } beats.push(+(bi / fr * .5 + t * .5).toFixed(3)); }
   /* 4박마다 오는 강박: 저음이 가장 센 자리 */
-  let bestBar = 0, bestBarS = -1; for (let o = 0; o < 4; o++) { let s = 0; for (let j = o; j < beats.length; j += 4) { const i = Math.round(beats[j] * fr); s += Math.max(0, eL[i] + 14); } if (s > bestBarS) { bestBarS = s; bestBar = o; } }
+  let bestBar = 0, bestBarS = -1; const pk = (i) => { let m = -99; for (let q = i - 1; q <= i + Math.round(fr * .1); q++) if (q >= 0 && q < n && eL[q] > m) m = eL[q]; return m; };
+  for (let o = 0; o < 4; o++) { let s = 0; for (let j = o; j < beats.length; j += 4) s += Math.max(0, pk(Math.round(beats[j] * fr)) + 14); if (s > bestBarS) { bestBarS = s; bestBar = o; } }
   const strong = beats.filter((_, j) => (j - bestBar) % 4 === 0);
   return { beats, strong, bpm: Math.round(bpm) };
 }
@@ -993,7 +995,7 @@ on('musicClear', 'click', () => { P.music.buf = null; P.music.name = ''; P.music
 let LIB = { bgm: [], sfx: [] }, libAudio = null;
 function markLib(file) { $('#bgmList .bgm').forEach((x) => x.classList.toggle('on', x.dataset.f === file)); }
 async function loadLibrary() {
-  try { const r = await fetch('audio/manifest.json', { cache: 'no-cache' }); if (!r.ok) throw 0; const m = await r.json(); const list = Array.isArray(m) ? m : (m.files || m.items || []);
+  try { const r = await fetch(AUD + 'manifest.json', { cache: 'no-cache' }); if (!r.ok) throw 0; const m = await r.json(); const list = Array.isArray(m) ? m : (m.files || m.items || []);
     LIB.bgm = list.filter((x) => x.type === 'bgm'); LIB.sfx = list.filter((x) => x.type === 'sfx'); } catch (_) { LIB = { bgm: [], sfx: [] }; }
   const moods = [...new Set(LIB.bgm.map((x) => x.mood))], box = $('#bgmList');
   box.innerHTML = LIB.bgm.length ? moods.map((md) => `<div class="bgmg"><b>${md}</b>${LIB.bgm.filter((x) => x.mood === md).map((x) => `<div class="bgm" data-f="${x.file}"><button class="pv" title="미리듣기">▶</button><span>${x.titleKo}<small>${x.durationSec ? fmt(x.durationSec) : ''}</small></span><button class="use">사용</button></div>`).join('')}</div>`).join('') : '<p class="hint">기본 음악 목록을 불러오지 못했어요. 내 음악 파일은 아래에서 넣을 수 있어요.</p>';
