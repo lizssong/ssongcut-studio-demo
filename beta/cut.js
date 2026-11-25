@@ -289,20 +289,25 @@
     let 오류 = null;
     const ve = new VideoEncoder({ output: (c, m) => mux.addVideoChunk(c, m), error: (e) => { 오류 = e; } }); ve.configure(vcfg);
     const ae = 소리됨 ? new AudioEncoder({ output: (c, m) => mux.addAudioChunk(c, m), error: (e) => { 오류 = e; } }) : null; if (ae) ae.configure(acfg);
-    let 나간 = 0, 장 = 0, 마지막 = -1;
-    for (const [i, [a, b]] of 조각.entries()) {
-      const 기준 = 나간;
+    /* 조각마다 출력 시작 시간을 정해 두고, 가까이 붙은 조각들은 한 번에 풀어 처리한다 (매번 처음부터 푸는 낭비 없음) */
+    const 표 = []; { let o = 0; for (const [a, b] of 조각) { 표.push({ a, b, o }); o += b - a; } }
+    const 묶음 = []; for (const s of [...표].sort((x, y) => x.a - y.a)) { const g = 묶음[묶음.length - 1]; if (g && s.a - g.b < 4 && s.a >= g.a) { g.b = Math.max(g.b, s.b); g.s.push(s); } else 묶음.push({ a: s.a, b: s.b, s: [s] }); }
+    /* 훅 조각처럼 순서가 앞으로 가는 조각이 있으면 출력 시간 순서대로 하나씩 */
+    const 순서대로 = 표.every((s, i) => !i || s.a >= 표[i - 1].a);
+    const 처리묶음 = 순서대로 ? 묶음 : 표.map((s) => ({ a: s.a, b: s.b, s: [s] }));
+    let 장 = 0, 마지막 = -1, 끝낸 = 0;
+    for (const [gi, g] of 처리묶음.entries()) {
       if (ae) { /* 조각 소리: 이음새에서 딸깍 소리가 나지 않게 아주 짧게 줄였다 키운다 */
-        const buf = await window.SCMedia.range48(파일, a, b), sr = 48000, n = Math.round((b - a) * sr), c0 = buf.getChannelData(0), c1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : c0, f = 240;
-        for (let off = 0; off < n; off += 1024) { const k = Math.min(1024, n - off), d = new Float32Array(k * 2); for (let j = 0; j < k; j++) { const p = off + j, g = Math.min(1, p / f, (n - p) / f); d[j] = (c0[p] || 0) * g; d[k + j] = (c1[p] || 0) * g; }
-          const ad = new AudioData({ format: 'f32-planar', sampleRate: sr, numberOfFrames: k, numberOfChannels: 2, timestamp: Math.round((기준 + off / sr) * 1e6), data: d }); ae.encode(ad); ad.close(); if (오류) throw 오류; }
+        const buf = await window.SCMedia.range48(파일, g.a, g.b), sr = 48000, c0 = buf.getChannelData(0), c1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : c0, f = 240;
+        for (const s of g.s) { const p0 = Math.round((s.a - g.a) * sr), n = Math.round((s.b - s.a) * sr);
+          for (let off = 0; off < n; off += 1024) { const k = Math.min(1024, n - off), d = new Float32Array(k * 2); for (let j = 0; j < k; j++) { const p = off + j, q = p0 + p, gg = Math.min(1, p / f, (n - p) / f); d[j] = (c0[q] || 0) * gg; d[k + j] = (c1[q] || 0) * gg; }
+            const ad = new AudioData({ format: 'f32-planar', sampleRate: sr, numberOfFrames: k, numberOfChannels: 2, timestamp: Math.round((s.o + off / sr) * 1e6), data: d }); ae.encode(ad); ad.close(); if (오류) throw 오류; } }
       }
-      await window.SCMedia.decodeVideo(파일, a, b, (frame, t) => {
-        if (t < a - 0.001 || t >= b) return; const ot = 기준 + (t - a); if (ot - 마지막 < 1 / (FPS + 1)) return;
+      await window.SCMedia.decodeVideo(파일, g.a, g.b, (frame, t) => {
+        const s = g.s.find((x) => t >= x.a - 0.001 && t < x.b); if (!s) return; const ot = s.o + Math.max(0, t - s.a); if (ot - 마지막 < 1 / (FPS + 1)) return;
         그리기(ot, frame, t); const vf = new VideoFrame(view, { timestamp: Math.round(ot * 1e6), duration: Math.round(1e6 / FPS) }); ve.encode(vf, { keyFrame: 장 % (FPS * 2) === 0 }); vf.close(); 장++; 마지막 = ot;
-        $("bar").style.width = `${Math.min(99, (ot / 총) * 100)}%`; $("progText").textContent = `조각 ${i + 1}/${조각.length} · ${시각(ot)} / ${시각(총)}`;
+        끝낸 = Math.max(끝낸, ot); $("bar").style.width = `${Math.min(99, (끝낸 / 총) * 100)}%`; $("progText").textContent = `저장 중 · ${시각(끝낸)} / ${시각(총)}`;
       }, () => ({ err: 오류, queue: ve.encodeQueueSize }));
-      나간 += b - a;
     }
     await ve.flush(); ve.close(); if (ae) { await ae.flush(); ae.close(); } if (오류) throw 오류;
     mux.finalize();
