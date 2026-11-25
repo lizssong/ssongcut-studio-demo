@@ -1121,6 +1121,11 @@ view.addEventListener('pointerup', endDrag); view.addEventListener('pointercance
 
 /* ---------- 시작 ---------- */
 window.toast = toast;
+(() => { /* 저장이 안 되는 브라우저는 처음부터 알려 준다 */
+  const ok = !!(window.VideoEncoder && window.VideoFrame), aok = !!window.AudioEncoder, mob = /iphone|ipad|android/i.test(navigator.userAgent), el = $('#envWarn'); if (!el) return;
+  const msg = !ok ? '이 브라우저에서는 MP4 저장이 되지 않아요. PC의 크롬이나 엣지에서 열어 주세요. (편집과 미리보기는 할 수 있어요)' : !aok ? '이 브라우저는 소리 넣기를 지원하지 않아 소리 없이 저장될 수 있어요. PC 크롬·엣지를 권해요.' : mob ? '휴대폰에서는 1~3분 쇼츠까지 권해요. 긴 영상 편집·저장은 PC 크롬·엣지가 빠르고 안정적이에요.' : '';
+  if (msg) { el.textContent = msg; el.classList.remove('hidden'); }
+})();
 applyPack('memory', true);
 syncAll(); loadFontPreviews(); loadLibrary();
 document.fonts.load('900 48px "Pretendard Variable"', '쏭컷').catch(() => {});
