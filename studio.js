@@ -111,9 +111,6 @@ const PACKS = {
   lecture: { n: '강의·후기', d: '깔끔한 글자, 차분한 전환', sw: ['#0f172a', '#334155'], layout: 'blur', trans: 'fade', look: 'natural', date: false, cap: 'clean', capAnim: 'rise',
     title: { font: 'Pretendard Variable', weight: 800, color: '#ffffff', accent: '#5eead4', stroke: 0, shadow: 0, box: 'none', anim: 'rise' },
     guide: '추천 순서: 강의명 크게 → 현장 사진·영상 → 수강생 후기 한 줄씩 → 문의처. 후기는 실제로 받은 문장만 넣어 주세요.' },
-  mv: { n: '뮤직비디오', d: '음악 박자에 맞춰 장면 전환 · 화면 펄스', sw: ['#0f0c29', '#ec4899'], layout: 'fill', trans: 'auto', look: 'vivid', date: false, cap: 'impact', capAnim: 'punch', mv: true,
-    title: { font: 'Black Han Sans', weight: 400, color: '#ffffff', accent: '#ffe14d', stroke: 0, shadow: 1, box: 'none', anim: 'punch' },
-    guide: '음악을 먼저 넣으면 박자를 찾아요. 사진·영상은 박자마다 바뀌고, 박자마다 화면이 쿵 하고 움직여요. 소리 탭에서 박자 간격·길이·시작 위치를 바꿀 수 있어요.' },
   vlog: { n: '브이로그·여행', d: '밝은 색감, 경쾌한 전환, 장소 자막', sw: ['#22d3ee', '#a78bfa'], layout: 'fill', trans: 'whip', look: 'vivid', date: true, cap: 'cute', capAnim: 'pop',
     title: { font: 'Jua', weight: 400, color: '#ffffff', accent: '#fef08a', stroke: 0, shadow: 1, box: 'none', anim: 'bounce' },
     guide: '추천 순서: 장소 이름 제목 카드 → 사진·영상(시간순) → 마지막 한마디. 장면마다 장소나 느낌을 한 줄 자막으로 넣으면 좋아요.' },
@@ -617,6 +614,7 @@ function loudestStart(buf, win) { return highlight(buf, buf.duration, Math.min(w
 async function setMusic(buf, name, lib) {
   P.music.buf = buf; P.music.name = name; P.music.lib = lib || ''; P.music.id++; P.mv.beats = []; P.mv.strong = []; P.mv.bpm = 0; P.mv.start = 0;
   $('#musicInfo').textContent = `${name} (${fmt(buf.duration)})${P.mv.on ? ' — 박자를 찾는 중…' : ' — 영상보다 짧으면 처음부터 다시 이어져요.'}`; $('#musicClear').classList.remove('hidden');
+  if (!P.mv.on) { $('#musicInfo').textContent = `${name} (${fmt(buf.duration)}) — 영상보다 짧으면 처음부터 다시 이어져요.`; changed(); return; }
   P.mv.analyzing = true; syncMv();
   try { const r = await analyzeBeats(buf); if (P.music.buf === buf) { P.mv.beats = r.beats; P.mv.strong = r.strong; P.mv.bpm = r.bpm; const s0 = r.strong.find((b) => b < 4) ?? r.beats[0]; if (s0 != null && s0 < 4) P.mv.start = s0; } } catch (e) { console.warn('beats', e); }
   P.mv.analyzing = false;
@@ -1010,15 +1008,7 @@ async function loadLibrary() {
 }
 on('sfxPrev', 'click', async () => { if (!P.sfx) return toast('효과음을 먼저 골라 주세요.'); if (P.sfx === 'synth') return toast('휙 소리는 미리보기에서 들을 수 있어요.'); const a = new Audio(AUD + P.sfx); a.volume = P.sfxVol; a.play().catch(() => {}); });
 on('sfxVol', 'input', (e) => { P.sfxVol = +e.target.value; $('#sfxVolV').textContent = Math.round(P.sfxVol * 100) + '%'; });
-/* 뮤직비디오 */
-on('mvOn', 'change', async (e) => { P.mv.on = e.target.checked; if (P.mv.on && P.music.buf && !P.mv.beats.length && !P.mv.analyzing) await setMusic(P.music.buf, P.music.name, P.music.lib); syncMv(); syncScene(); changed(); });
-segClick('mvPer', (v) => { P.mv.per = +v; syncMv(); changed(); });
-on('mvPulse', 'change', (e) => { P.mv.pulse = e.target.checked; scheduleDraw(); });
-on('mvFlash', 'change', (e) => { P.mv.flash = e.target.checked; scheduleDraw(); });
-on('mvLen', 'change', (e) => { P.mv.len = e.target.value; changed(); });
-on('mvStart', 'change', (e) => { if (!P.music.buf) return; P.mv.start = clamp(+e.target.value || 0, 0, Math.max(0, P.music.buf.duration - 3)); syncMv(); changed(); });
-on('mvHi', 'click', () => { if (!P.music.buf) return toast('음악을 먼저 넣어 주세요.'); const win = P.mv.len === 'auto' || P.mv.len === 'song' ? Math.min(30, P.music.buf.duration) : +P.mv.len; let s = loudestStart(P.music.buf, win);
-  const near = P.mv.beats.reduce((a, b) => Math.abs(b - s) < Math.abs(a - s) ? b : a, s); P.mv.start = Math.max(0, near); syncMv(); changed(); toast(`${P.mv.start.toFixed(1)}초부터가 가장 신나는 구간이에요.`); });
+
 on('musicVol', 'input', (e) => { P.music.vol = +e.target.value; $('#musicVolV').textContent = Math.round(P.music.vol * 100) + '%'; });
 on('duck', 'change', (e) => { P.music.duck = e.target.checked; }); on('sfx', 'change', (e) => { P.sfx = e.target.value; if (P.sfx && P.sfx !== 'synth') loadSfx(P.sfx); });
 
@@ -1047,8 +1037,7 @@ view.addEventListener('pointerup', endDrag); view.addEventListener('pointercance
 
 /* ---------- 시작 ---------- */
 window.toast = toast;
-const MODE = new URLSearchParams(location.search).get('mode');
-if (MODE === 'mv') { P.mv.on = true; applyPack('mv', true); document.body.classList.add('mode-mv'); } else applyPack('memory', true);
+applyPack('memory', true);
 syncAll(); loadFontPreviews(); loadLibrary();
 document.fonts.load('900 48px "Pretendard Variable"', '쏭컷').catch(() => {});
 /* 시험·연동용: 같은 t면 항상 같은 화면 */

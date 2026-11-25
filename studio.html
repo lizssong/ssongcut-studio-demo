@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>쏭컷 스튜디오 | 사진·영상·음악을 올리면 쇼츠·릴스·뮤직비디오로</title>
+<title>쏭컷 스튜디오 | 사진·영상을 올리면 쇼츠·릴스 한 편으로</title>
 <meta name="description" content="사진과 동영상을 올리면 순서 정리, 보정, 글자 모션, 음악까지 넣어 영상 한 편으로 만들어요. 파일은 내 브라우저 안에서만 처리됩니다. 위드AI솔루션 송민경(쏭리즈)의 쏭컷 스튜디오.">
 <meta property="og:title" content="쏭컷 스튜디오 · 사진·영상 편집">
 <meta property="og:description" content="사진·영상을 올리면 글자, 보정, 음악까지. 릴스·쇼츠·유튜브용 MP4로 바로 저장.">
@@ -15,30 +15,28 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="studio.css?v=7">
-<link rel="stylesheet" href="pay.css?v=7">
+<link rel="stylesheet" href="studio.css?v=8">
+<link rel="stylesheet" href="pay.css?v=8">
 </head>
 <body>
 
 <nav class="nav"><div class="wrap">
   <a class="logo" href="./"><span class="logo-mark"><svg viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z" fill="#fff"/></svg></span>쏭컷 AI<small>STUDIO</small></a>
-  <div class="modes"><a href="./">✦ AI 숏츠</a><a class="m-ed" href="studio.html">🎞 사진·영상</a><a class="m-mv" href="studio.html?mode=mv">🎵 뮤직비디오</a><a href="cut.html">✂ 공백 컷</a></div>
+  <div class="modes"><a href="./">✦ AI 숏츠</a><a class="m-ed" href="studio.html">🎞 사진·영상</a><a href="cut.html">✂ 공백 컷</a></div>
   <div class="acct" id="acct"></div><span class="badge">BETA</span>
 </div></nav>
 
 <main class="wrap">
   <div class="head">
     <h1 class="t-ed">사진·영상을 올리면 <span class="grad">쇼츠·릴스</span> 한 편으로</h1>
-    <h1 class="t-mv">음악과 사진·영상을 올리면 <span class="grad">박자에 맞춘 뮤직비디오</span>로</h1>
     <p class="t-ed">순서 정리, 보정, 움직이는 글자, 전환 효과, 배경음악·효과음까지 한 화면에서 끝내고 MP4로 저장해요.</p>
-    <p class="t-mv">음악의 박자를 찾아 장면이 박자마다 바뀌고, 박자마다 화면이 쿵 하고 움직여요. 가장 신나는 구간도 알아서 찾아요.</p>
-    <div class="trust"><span><i>✓</i>편집·미리보기는 로그인 없이</span><span><i>✓</i>파일은 내 브라우저 안에서만 처리</span><span><i>✓</i>템플릿 8종 · 전환 13종 · 상업용 배경음악</span></div>
+    <div class="trust"><span><i>✓</i>편집·미리보기는 로그인 없이</span><span><i>✓</i>파일은 내 브라우저 안에서만 처리</span><span><i>✓</i>템플릿 7종 · 전환 13종 · 상업용 배경음악</span></div>
   </div>
 
   <label id="drop" class="drop">
-    <input id="files" type="file" accept="image/*,video/*,audio/*" multiple hidden>
+    <input id="files" type="file" accept="image/*,video/*" multiple hidden>
     <h3>사진·동영상을 한꺼번에 끌어다 놓으세요</h3>
-    <p>여러 개를 한 번에 고를 수 있어요 · 사진 jpg·png·webp · 동영상 mp4·mov·webm<span class="t-mv"> · 음악 mp3·m4a·wav도 함께 넣으세요</span></p>
+    <p>여러 개를 한 번에 고를 수 있어요 · 사진 jpg·png·webp · 동영상 mp4·mov·webm</p>
     <span class="btn">내 PC에서 고르기</span>
   </label>
 
@@ -234,20 +232,6 @@
       <div class="pane hidden" data-p="sound">
         <h3>동영상 소리</h3>
         <label class="check"><input id="origSound" type="checkbox" checked> 동영상 원래 소리 살리기</label>
-        <div id="mvBox" class="mvbox">
-          <label class="check"><input id="mvOn" type="checkbox"> <b>🎵 뮤직비디오: 음악 박자에 맞추기</b></label>
-          <p class="hint" id="mvInfo"></p>
-          <div id="mvOpts" class="hidden">
-            <div class="field"><label>장면이 바뀌는 간격</label><div class="seg" id="mvPer"><button data-v="1">1박</button><button data-v="2">2박</button><button data-v="4">4박</button><button data-v="8">8박</button></div></div>
-            <div class="two">
-              <div class="field"><label for="mvLen">영상 길이</label><select id="mvLen"><option value="auto">장면을 한 번씩</option><option value="15">15초</option><option value="30">30초</option><option value="60">60초</option><option value="song">음악 끝까지 (최대 3분)</option></select></div>
-              <div class="field"><label for="mvStart">음악 시작 위치(초)</label><input id="mvStart" type="number" min="0" step="0.5" value="0"></div>
-            </div>
-            <button id="mvHi" class="btn small" style="width:100%;margin-bottom:10px">가장 신나는 구간부터 시작하기</button>
-            <label class="check"><input id="mvPulse" type="checkbox" checked> 박자마다 화면 쿵 (펄스)</label>
-            <label class="check"><input id="mvFlash" type="checkbox"> 강박마다 번쩍</label>
-          </div>
-        </div>
         <h3>배경음악</h3>
         <p class="hint">아래 음악은 모두 상업적으로 써도 되는 무료 음원이에요 (CC0 · 출처 표시 없이 사용 가능).</p>
         <div id="bgmList" class="bgmlist"><p class="hint">음악 목록을 불러오는 중…</p></div>
@@ -289,8 +273,8 @@
   <div class="row"><button id="qaClose" class="btn small primary">닫기</button><button id="qaSave" class="btn small">이미지로 저장</button></div>
 </div></div>
 
-<script src="studio.js?v=7"></script>
-<script type="module" src="pay.js?v=7"></script>
+<script src="studio.js?v=8"></script>
+<script type="module" src="pay.js?v=8"></script>
 <script>if('serviceWorker' in navigator){addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}</script>
 </body>
 </html>

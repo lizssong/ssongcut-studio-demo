@@ -97,7 +97,7 @@ function openPaywall() {
   const ready = payReady();
   let sel = PLANS.find(p => p.best) || PLANS[0];
   const cards = '<div class="plans">' + PLANS.map(p => '<button type="button" class="pl' + (p === sel ? ' on' : '') + '" data-id="' + p.id + '">' + (p.best ? '<em>추천</em>' : '') + '<span class="pn">' + p.name + '</span><b>' + p.count + '건</b><span class="pp">' + won(p.price) + '</span><span class="pu">1건 ' + won(Math.round(p.price / p.count)) + ' · ' + p.desc + '</span></button>').join('') + '</div>';
-  const m = modal(head + cards + '<ul><li>영상 1개 만들기 = 1건 (AI 숏츠 · 사진 편집 · 뮤직비디오)</li><li>긴 영상은 길이 상관없이, 숏츠 여러 편도 1건</li><li>수정 · 다시 저장 · 생성 실패는 차감 없음</li><li>결제일부터 6개월 사용 · 자동 결제 없음</li></ul>'
+  const m = modal(head + cards + '<ul><li>영상 1개 만들기 = 1건 (AI 숏츠 · 사진·영상 편집)</li><li>긴 영상은 길이 상관없이, 숏츠 여러 편도 1건</li><li>수정 · 다시 저장 · 생성 실패는 차감 없음</li><li>결제일부터 6개월 사용 · 자동 결제 없음</li></ul>'
     + (ready ? '<label class="agree"><input type="checkbox" id="pwAg"><span><a href="#terms" class="pwLink">이용약관 · 환불 안내</a>를 확인했고 결제에 동의합니다.</span></label><button class="btn btn-primary" id="pwPay" disabled>카드로 ' + won(sel.price) + ' 결제하기</button><p class="note">결제는 토스페이먼츠로 안전하게 처리돼요. 카드 정보는 쏭컷에 저장되지 않아요.</p>'
       : '<button class="btn btn-primary" id="pwAsk">이용권 구매 문의하기</button><p class="note">카드 · 카카오페이 · 네이버페이 결제를 곧 열어요. 그전에는 문의를 남겨 주시면 바로 안내해 드릴게요.</p>')
     + '<div class="cbox"><label for="pwCode">혜택 코드가 있나요?</label><div class="crow"><input class="inp" id="pwCode" placeholder="코드 입력" autocomplete="off" maxlength="30"><button class="btn btn-ghost btn-sm" id="pwCodeGo">적용</button></div><p class="cmsg" id="pwCodeMsg"></p></div>'

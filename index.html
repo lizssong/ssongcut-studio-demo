@@ -287,7 +287,7 @@ textarea.inp{height:auto;min-height:62px;padding:10px 12px;resize:vertical;line-
 .modes a:hover{color:var(--text);background:rgba(255,255,255,.06)}
 .modes a.on{background:var(--grad);color:#fff;box-shadow:0 6px 18px -6px rgba(236,72,153,.6)}
 .tools{padding:8px 0 10px}
-.also{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:0 0 34px}
+.also{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:0 0 34px}
 .also a{display:block;text-decoration:none;text-align:left;padding:20px 22px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);transition:.15s}
 .also a:hover{border-color:var(--line2);transform:translateY(-2px)}
 .also b{display:block;font-size:17px;font-weight:800;margin-bottom:6px}
@@ -300,14 +300,14 @@ textarea.inp{height:auto;min-height:62px;padding:10px 12px;resize:vertical;line-
 
 <nav class="nav"><div class="wrap">
   <a class="logo" href="#" id="homeLink"><span class="logo-mark"><svg viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z" fill="#fff"/></svg></span>쏭컷 AI<small>STUDIO</small></a>
-  <div class="nav-links"><a href="studio.html">사진·영상 편집</a><a href="studio.html?mode=mv">뮤직비디오</a><a href="#features">기능</a><a href="#how">사용 방법</a><a href="#faq">자주 묻는 질문</a></div>
+  <div class="nav-links"><a href="studio.html">사진·영상 편집</a><a href="#features">기능</a><a href="#how">사용 방법</a><a href="#faq">자주 묻는 질문</a></div>
   <div class="nav-cta"><div class="acct" id="acct"></div><span class="badge">BETA</span><button class="btn btn-ghost btn-sm hidden" id="pwaInstall" type="button"><span><span class="pi-l">앱 </span>설치</span></button><button class="btn btn-primary btn-sm" id="navUpload">영상 올리기</button></div>
 </div></nav>
 
 <!-- ============ LANDING ============ -->
 <main id="vHome">
   <section class="hero"><div class="wrap">
-    <div class="modes-wrap"><div class="modes"><a class="on" href="./">✦ 긴 영상 → AI 숏츠</a><a href="studio.html">🎞 사진·영상 → 쇼츠·릴스</a><a href="studio.html?mode=mv">🎵 음악 → 뮤직비디오</a><a href="cut.html">✂ 공백 컷편집</a></div></div>
+    <div class="modes-wrap"><div class="modes"><a class="on" href="./">✦ 긴 영상 → AI 숏츠</a><a href="studio.html">🎞 사진·영상 → 쇼츠·릴스</a><a href="cut.html">✂ 공백 컷편집</a></div></div>
     <div class="eyebrow"><b>AI AUTO</b>업로드 한 번이면 요약 · 하이라이트 · 자막까지</div>
     <h1>긴 영상 하나만 올리세요.<br><span class="grad">숏츠는 AI가 자막까지</span> 완성합니다.</h1>
     <p class="lead">강의·라이브·인터뷰 영상을 AI가 끝까지 듣고 이야기를 요약한 뒤, 가장 반응이 좋을 장면만 골라 9:16 숏츠로 만들어요. 자막은 말하는 타이밍에 맞춰 자동으로 입혀집니다.</p>
@@ -351,8 +351,7 @@ textarea.inp{height:auto;min-height:62px;padding:10px 12px;resize:vertical;line-
   </div></section>
 
   <section class="tools"><div class="wrap"><div class="also">
-  <a href="studio.html"><b>🎞 사진·영상 → 쇼츠·릴스</b><span>내 사진과 동영상을 올리면 순서 정리, 보정, 움직이는 글자, 전환 효과, 배경음악까지 넣어 한 편으로 만들어요. 템플릿 8종 · 전환 13종.</span><i>열기 →</i></a>
-  <a href="studio.html?mode=mv"><b>🎵 음악 → 뮤직비디오</b><span>음악과 사진·영상을 올리면 박자를 찾아 장면이 박자에 맞춰 바뀌고, 박자마다 화면이 쿵 하고 움직여요.</span><i>열기 →</i></a>
+  <a href="studio.html"><b>🎞 사진·영상 → 쇼츠·릴스</b><span>내 사진과 동영상을 올리면 순서 정리, 보정, 움직이는 글자, 전환 효과, 배경음악까지 넣어 한 편으로 만들어요. 템플릿 7종 · 전환 13종.</span><i>열기 →</i></a>
   <a href="cut.html"><b>✂ 공백 컷편집</b><span>말하다 멈춘 자리, 숨 고르는 자리를 찾아 자동으로 잘라 내요. 로그인 없이 무료예요.</span><i>무료로 열기 →</i></a>
 </div></div></section>
 <section class="feats" id="features"><div class="wrap">
@@ -369,8 +368,8 @@ textarea.inp{height:auto;min-height:62px;padding:10px 12px;resize:vertical;line-
       <div class="stp"><b>STEP 03</b><h4>확인하고 저장</h4><p>마음에 드는 숏츠는 바로 MP4로. 고치고 싶을 때만 자막과 구간을 손보세요.</p></div>
     </div>
     <div class="faq" id="faq">
-      <details id="pricing"><summary>요금은 어떻게 되나요?</summary><p>구글 계정으로 로그인하면 <b>첫 1회는 무료</b>예요. 이후에는 필요한 만큼만 사는 <b>건수 이용권</b>이에요.<br>· <b>라이트 10건 4,900원</b> (1건 490원)<br>· <b>프로 25건 9,900원</b> (1건 396원)<br>· <b>울트라 50건 17,900원</b> (1건 358원)<br>영상 1개를 만드는 것이 1건이에요. 긴 영상 AI 숏츠는 영상 길이와 상관없이 숏츠가 여러 편 나와도 1건, 사진·영상 편집과 뮤직비디오는 한 편을 처음 저장할 때 1건이에요. 자막·구간 수정과 다시 저장, 생성에 실패한 경우는 차감되지 않아요. 결제일부터 6개월 안에 쓰면 되고, 자동 결제는 없어요. 강의·이벤트에서 받은 <b>혜택 코드</b>가 있으면 결제 창 아래에 입력해 건수를 추가로 받을 수 있어요. Gemini 엔진은 본인 Gemini 키(무료 등급 가능)로 동작하고, ‘내 PC · 키 없이’ 엔진은 키 없이 쓸 수 있어요.</p></details>
-<details id="terms"><summary>이용약관 · 환불 안내</summary><p>· 상품: 쏭컷 AI 건수 이용권 2종(부가세 포함). 라이트 10건 4,900원, 프로 25건 9,900원, 울트라 50건 17,900원. 긴 영상 1개로 숏츠를 생성하거나 사진·영상 편집·뮤직비디오 한 편을 처음 저장할 때 1건이 차감되며, 같은 영상에서 나온 숏츠의 수정·재저장과 생성 실패는 차감되지 않아요. 이용 기간은 결제일부터 6개월이고, 자동 결제(정기 결제)는 없습니다.<br>· 혜택 코드: 운영자가 발급한 코드로 받은 건수는 무료 제공분이라 환불 대상이 아니며, 코드마다 1인 1회 사용할 수 있어요.<br>· 환불: 결제 후 7일 이내이고 이용권을 한 건도 쓰지 않았다면 전액 환불해 드려요. 이용권으로 숏츠를 만든 뒤에는 디지털 콘텐츠 특성상 환불이 제한될 수 있어요. 환불 문의는 mkssong22@gmail.com 으로 보내 주세요.<br>· 영상 원본은 서버로 업로드하지 않으며, 저작권이 있거나 사용 권한이 없는 영상은 이용할 수 없어요.<br>· 로그인 시 이메일과 이용 기록(무료 사용 여부, 이용권 기간, 결제 번호)을 이용권 관리 목적으로 보관해요. 결제는 토스페이먼츠를 통해 처리되며 카드 정보는 쏭컷에 저장되지 않아요. <a href="https://withaisolution.co.kr/privacy/" target="_blank" rel="noopener" style="color:#c4b5fd">개인정보처리방침</a></p></details>
+      <details id="pricing"><summary>요금은 어떻게 되나요?</summary><p>구글 계정으로 로그인하면 <b>첫 1회는 무료</b>예요. 이후에는 필요한 만큼만 사는 <b>건수 이용권</b>이에요.<br>· <b>라이트 10건 4,900원</b> (1건 490원)<br>· <b>프로 25건 9,900원</b> (1건 396원)<br>· <b>울트라 50건 17,900원</b> (1건 358원)<br>영상 1개를 만드는 것이 1건이에요. 긴 영상 AI 숏츠는 영상 길이와 상관없이 숏츠가 여러 편 나와도 1건, 사진·영상 편집은 한 편을 처음 저장할 때 1건이에요. 자막·구간 수정과 다시 저장, 생성에 실패한 경우는 차감되지 않아요. 결제일부터 6개월 안에 쓰면 되고, 자동 결제는 없어요. 강의·이벤트에서 받은 <b>혜택 코드</b>가 있으면 결제 창 아래에 입력해 건수를 추가로 받을 수 있어요. Gemini 엔진은 본인 Gemini 키(무료 등급 가능)로 동작하고, ‘내 PC · 키 없이’ 엔진은 키 없이 쓸 수 있어요.</p></details>
+<details id="terms"><summary>이용약관 · 환불 안내</summary><p>· 상품: 쏭컷 AI 건수 이용권 2종(부가세 포함). 라이트 10건 4,900원, 프로 25건 9,900원, 울트라 50건 17,900원. 긴 영상 1개로 숏츠를 생성하거나 사진·영상 편집 한 편을 처음 저장할 때 1건이 차감되며, 같은 영상에서 나온 숏츠의 수정·재저장과 생성 실패는 차감되지 않아요. 이용 기간은 결제일부터 6개월이고, 자동 결제(정기 결제)는 없습니다.<br>· 혜택 코드: 운영자가 발급한 코드로 받은 건수는 무료 제공분이라 환불 대상이 아니며, 코드마다 1인 1회 사용할 수 있어요.<br>· 환불: 결제 후 7일 이내이고 이용권을 한 건도 쓰지 않았다면 전액 환불해 드려요. 이용권으로 숏츠를 만든 뒤에는 디지털 콘텐츠 특성상 환불이 제한될 수 있어요. 환불 문의는 mkssong22@gmail.com 으로 보내 주세요.<br>· 영상 원본은 서버로 업로드하지 않으며, 저작권이 있거나 사용 권한이 없는 영상은 이용할 수 없어요.<br>· 로그인 시 이메일과 이용 기록(무료 사용 여부, 이용권 기간, 결제 번호)을 이용권 관리 목적으로 보관해요. 결제는 토스페이먼츠를 통해 처리되며 카드 정보는 쏭컷에 저장되지 않아요. <a href="https://withaisolution.co.kr/privacy/" target="_blank" rel="noopener" style="color:#c4b5fd">개인정보처리방침</a></p></details>
 <details><summary>정말 하나하나 편집 안 해도 되나요?</summary><p>네. 영상을 올리고 버튼 한 번만 누르면 요약, 장면 선택, 자막, 세로 화면 구성까지 끝난 숏츠가 여러 편 나옵니다. 오타나 구간이 마음에 들지 않을 때만 편집 화면에서 고치면 돼요.</p></details>
       <details><summary>영상이 외부 서버로 올라가나요?</summary><p>영상 원본은 어디에도 올라가지 않고, 자르기·자막 입히기·저장은 모두 내 브라우저 안에서 처리돼요. Gemini 엔진을 쓰면 받아쓰기와 요약을 위해 <b>소리(음성)만</b> 내 Gemini 키로 Google에 보내요. 아무것도 보내고 싶지 않다면 ‘내 PC · 키 없이’ 엔진을 고르세요.</p></details>
       <details><summary>어떤 영상이 잘 되나요?</summary><p>말소리가 또렷한 강의, 강연, 인터뷰, 라이브, 리뷰 영상이 가장 좋아요. 배경음악만 있는 영상은 자막과 요약을 만들기 어렵습니다. PC 크롬·엣지에서 60분 이하 영상을 권장해요.</p></details>
@@ -1296,8 +1295,8 @@ window.SCApp = { setFile, show, toast };
 </script>
 
 <!-- SSONGCUT_PAY_BEGIN -->
-<link rel="stylesheet" href="pay.css?v=7">
-<script type="module" src="pay.js?v=7"></script>
+<link rel="stylesheet" href="pay.css?v=8">
+<script type="module" src="pay.js?v=8"></script>
 <!-- SSONGCUT_PAY_END -->
 <!-- SSONGCUT_PWA_START -->
 <script>
