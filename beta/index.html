@@ -514,7 +514,8 @@ const S = {
 const fmt = (t) => { t = Math.max(0, t); const m = Math.floor(t / 60), s = Math.floor(t % 60); return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0'); };
 const fmtSrt = (t) => { t = Math.max(0, t); const h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = Math.floor(t % 60), ms = Math.round((t % 1) * 1000) % 1000; return [h, m, s].map(x => String(x).padStart(2, '0')).join(':') + ',' + String(ms).padStart(3, '0'); };
 const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const sleepT = (ms) => new Promise(r => setTimeout(r, ms));
+const sleep = (ms) => ms > 4 ? sleepT(ms) : new Promise(r => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); }); /* 탭이 뒤에 있어도 느려지지 않게 */
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function toast(msg, ms = 2600) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), ms); }
 function show(id) { ['vHome', 'vProc', 'vRes'].forEach(v => $('#' + v).classList.toggle('hidden', v !== id)); window.scrollTo({ top: 0 }); }
@@ -737,14 +738,15 @@ function snapTime(t, kind) {
 async function geminiTranscribe(pcm, key) {
   const sr = 16000; const chunks = planChunks(pcm, 50, 75); const results = new Array(chunks.length); let done = 0, next = 0;
   $(`#slist li[data-s="asr"] .st`).textContent = `0 / ${chunks.length}`;
+  const failed = []; let lost = 0, retry = false, queue = null;
   const worker = async () => {
-    while (next < chunks.length) {
-      const ci = next++; const [a, b] = chunks[ci]; const off = a / sr, len = (b - a) / sr;
+    while (queue ? queue.length : next < chunks.length) {
+      const ci = queue ? queue.shift() : next++; const [a, b] = chunks[ci]; const off = a / sr, len = (b - a) / sr;
       let e = 0; for (let i = a; i < b; i += 16) e += pcm[i] * pcm[i]; const rms = Math.sqrt(e / ((b - a) / 16));
       let segs = [];
       if (rms >= 0.003) {
         const body = { contents: [{ parts: [{ inlineData: { mimeType: 'audio/wav', data: wavB64(pcm, a, b) } }, { text: TR_PROMPT }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0 } };
-        let txt; try { txt = await geminiCall(key, TR_MODELS, body, 3, 120000); } catch (err) { if (err.message === 'BAD_KEY' || err.message === 'CANCEL') throw err; console.warn('chunk fail', ci, err); txt = '[]'; }
+        let txt; try { txt = await geminiCall(key, TR_MODELS, body, 3, 120000); } catch (err) { if (err.message === 'BAD_KEY' || err.message === 'CANCEL') throw err; console.warn('chunk fail', ci, err); if (!retry) { failed.push(ci); continue; } txt = '[]'; lost++; }
         let arr = []; try { arr = parseJSON(txt); if (!Array.isArray(arr)) arr = arr.segments || arr.items || []; } catch (_) { arr = []; }
         segs = arr.map(x => ({ s: +x.s, e: +x.e, t: String(x.t || x.text || '').trim() })).filter(x => x.t && isFinite(x.s) && isFinite(x.e)).map(x => ({ s: clamp(x.s, 0, len), e: clamp(Math.max(x.e, x.s + 0.3), 0, len + 0.3), t: x.t })).sort((p, q) => p.s - q.s);
         segs = segs.filter((x, i) => !(i && x.t === segs[i - 1].t && Math.abs(x.s - segs[i - 1].s) < 1.5));
@@ -756,7 +758,9 @@ async function geminiTranscribe(pcm, key) {
       if (segs.length) feed(segs[0].s, segs.slice(0, 3).map(x => x.t).join(' ').slice(0, 90));
     }
   };
-  await Promise.all(Array.from({ length: Math.min(4, chunks.length) }, worker));
+  await Promise.all(Array.from({ length: Math.min(chunks.length > 30 ? 2 : 4, chunks.length) }, worker));
+  if (failed.length) { /* 실패한 구간은 잠시 쉬었다가 한 번 더 */ prog('asr', 0.97, `다시 받아쓰는 중 · ${failed.length}구간`); await sleep(8000); retry = true; queue = failed.slice(); done -= 0; await worker(); }
+  if (lost) toast(`받아쓰기 중 ${lost}개 구간(약 ${lost}분)을 놓쳤어요. 무료 키 사용량이 몰리면 생길 수 있어요.`, 6000);
   // merge, fix overlaps, snap to speech energy, split into words
   const segs = results.flat().sort((p, q) => p.s - q.s); const words = []; let lastE = 0;
   for (const sg of segs) {

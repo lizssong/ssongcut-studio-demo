@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="audio-base" content="../audio/">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>쏭컷 스튜디오 | 사진·영상을 올리면 쇼츠·릴스 한 편으로</title>
+<meta name="description" content="사진과 동영상을 올리면 순서 정리, 보정, 글자 모션, 음악까지 넣어 영상 한 편으로 만들어요. 파일은 내 브라우저 안에서만 처리됩니다. 위드AI솔루션 송민경(쏭리즈)의 쏭컷 스튜디오.">
+<meta property="og:title" content="쏭컷 스튜디오 · 사진·영상 편집">
+<meta property="og:description" content="사진·영상을 올리면 글자, 보정, 음악까지. 릴스·쇼츠·유튜브용 MP4로 바로 저장.">
+<meta name="theme-color" content="#08080d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="studio.css?v=9">
+<link rel="stylesheet" href="pay.css?v=9">
+</head>
+<body>
+
+<nav class="nav"><div class="wrap">
+  <a class="logo" href="./"><span class="logo-mark"><svg viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z" fill="#fff"/></svg></span>쏭컷 AI<small>STUDIO</small></a>
+  <div class="modes"><a href="./">✦ AI 숏츠</a><a class="m-ed" href="studio.html">🎞 사진·영상</a><a href="cut.html">✂ 공백 컷</a></div>
+  <div class="acct" id="acct"></div><span class="badge">BETA</span>
+</div></nav>
+
+<main class="wrap">
+  <div class="head">
+    <h1 class="t-ed">사진·영상을 올리면 <span class="grad">쇼츠·릴스</span> 한 편으로</h1>
+    <p class="t-ed">순서 정리, 보정, 움직이는 글자, 전환 효과, 배경음악·효과음까지 한 화면에서 끝내고 MP4로 저장해요.</p>
+    <div class="trust"><span><i>✓</i>편집·미리보기는 로그인 없이</span><span><i>✓</i>파일은 내 브라우저 안에서만 처리</span><span><i>✓</i>템플릿 7종 · 전환 13종 · 상업용 배경음악</span></div>
+  </div>
+
+  <label id="drop" class="drop">
+    <input id="files" type="file" accept="image/*,video/*" multiple hidden>
+    <h3>사진·동영상을 한꺼번에 끌어다 놓으세요</h3>
+    <p>여러 개를 한 번에 고를 수 있어요 · 사진 jpg·png·webp · 동영상 mp4·mov·webm</p>
+    <span class="btn">내 PC에서 고르기</span>
+  </label>
+
+  <div id="work" class="editor hidden">
+    <div>
+      <div class="stage"><canvas id="view" width="1080" height="1920"></canvas></div>
+      <div class="row transport">
+        <button id="play" class="btn primary small">▶ 미리보기</button>
+        <input id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="재생 위치">
+        <span id="clock" class="clock">0:00 / 0:00</span>
+      </div>
+      <div class="row stripbar">
+        <div class="grp">
+          <button id="addMore" class="btn small">＋ 사진·영상</button>
+          <button id="addCard" class="btn small">＋ 글자 카드</button>
+          <button id="sortDate" class="btn small" title="찍은 날짜순으로 다시 놓기">날짜순</button>
+        </div>
+        <div class="grp">
+          <button id="mvL" class="btn small icon" title="앞으로">◀</button>
+          <button id="mvR" class="btn small icon" title="뒤로">▶</button>
+          <button id="dup" class="btn small" title="복제">복제</button>
+          <button id="del" class="btn small danger" title="빼기">빼기</button>
+        </div>
+      </div>
+      <div id="strip" class="strip" aria-label="장면 순서. 끌어서 순서를 바꿀 수 있어요."></div>
+      <div class="row quick">
+        <input id="quickCap" type="text" maxlength="60" placeholder="선택한 장면에 넣을 자막 (강조할 말은 *별표*로 감싸세요)">
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="tabs" id="tabs">
+        <button data-t="proj" class="on">구성</button>
+        <button data-t="scene">장면·보정</button>
+        <button data-t="text">글자</button>
+        <button data-t="sound">소리</button>
+        <button data-t="out">저장</button>
+      </div>
+
+      <!-- 구성 -->
+      <div class="pane" data-p="proj">
+        <h3>어떤 영상인가요?</h3>
+        <div class="packs" id="packs"></div>
+        <div class="guide" id="packGuide"></div>
+
+        <h3>화면</h3>
+        <div class="field"><div class="lab">화면 비율</div>
+          <div class="seg" id="ratio"><button data-v="9:16">세로 9:16</button><button data-v="16:9">가로 16:9</button><button data-v="1:1">정사각 1:1</button><button data-v="4:5">피드 4:5</button></div></div>
+        <div class="field"><div class="lab">화면 구성</div>
+          <div class="seg" id="layout"><button data-v="blur">흐린 배경</button><button data-v="fill">꽉 채우기</button><button data-v="frame">사진 액자</button><button data-v="recap">제목 띠</button></div></div>
+        <div class="two">
+          <div class="field"><label for="trans">장면 전환</label>
+            <select id="trans" class="transSel"><option value="auto">✦ 알아서 섞기</option><option value="fade">부드럽게 겹치기</option><option value="slide">옆으로 밀기</option><option value="up">위로 밀기</option><option value="whip">휙 넘기기</option><option value="zoom">확대하며</option><option value="blurzoom">흐리게 줌</option><option value="spin">빙글 돌기</option><option value="circle">동그랗게 열기</option><option value="flash">번쩍</option><option value="glitch">글리치</option><option value="shake">흔들림</option><option value="wipe">닦아내기</option><option value="dip">어두워졌다가</option><option value="none">바로 바뀌기</option></select></div>
+          <div class="field"><label for="transDur">전환 시간 <span id="transDurV">0.4초</span></label><input id="transDur" type="range" min="0.2" max="1" step="0.1" value="0.4"></div>
+        </div>
+        <div class="two">
+          <div class="field"><label for="photoSec">사진 한 장 <span id="photoSecV">3초</span></label><input id="photoSec" type="range" min="1.5" max="8" step="0.5" value="3"></div>
+          <div class="field"><label for="clipSec">동영상 한 개 <span id="clipSecV">5초</span></label><input id="clipSec" type="range" min="2" max="30" step="1" value="5"></div>
+        </div>
+        <label class="check"><input id="clipFull" type="checkbox"> 동영상은 전체 길이로 넣기 (롱폼·유튜브 편집)</label>
+
+        <h3>이야기</h3>
+        <div class="field"><label for="title">맨 앞 제목 카드</label><input id="title" type="text" maxlength="40" placeholder="비워 두면 제목 카드 없이 시작해요"></div>
+        <div class="field"><label for="ending">맨 끝 한마디 카드</label><input id="ending" type="text" maxlength="50" placeholder="예: 문의는 프로필 링크에서"></div>
+        <div class="field"><label for="hook">첫 3초 훅 문구</label><input id="hook" type="text" maxlength="30" placeholder="첫 장면 위에 흰 띠로 떠요 (제목 카드가 없을 때)"></div>
+        <div class="field hidden" id="fixedWrap"><label for="fixedTitle">위쪽 고정 제목 (두 줄)</label><textarea id="fixedTitle" rows="2" maxlength="40" placeholder="첫째 줄은 흰색&#10;둘째 줄은 노란색으로 나와요"></textarea></div>
+        <div class="field"><label for="brand">계정·상호 표시</label><input id="brand" type="text" maxlength="30" placeholder="예: @내계정 (비워 두면 없음)"></div>
+        <label class="check"><input id="dateStamp" type="checkbox"> 사진 구석에 찍은 날짜 표시</label>
+
+        <h3>색</h3>
+        <div class="row" style="margin-bottom:12px">
+          <input id="bg1" type="color" value="#7c3aed" title="카드·액자 배경 1"><input id="bg2" type="color" value="#ec4899" title="카드·액자 배경 2">
+          <button id="pickColors" class="btn small">내 사진 색으로 맞추기</button>
+        </div>
+        <p class="hint">제목 카드와 사진 액자 배경에 쓰는 두 가지 색이에요.</p>
+        <label class="check"><input id="safe" type="checkbox"> 안전 영역 보기 (미리보기에만 표시)</label>
+      </div>
+
+      <!-- 장면 · 보정 -->
+      <div class="pane hidden" data-p="scene">
+        <div class="empty" id="scEmpty">아래 장면 띠에서 장면을 하나 골라 주세요.</div>
+        <div id="scBody" class="hidden">
+          <h3 id="scTitle">장면</h3>
+          <div class="field"><label for="scDur">이 장면 길이 <span id="scDurV">3초</span></label><input id="scDur" type="range" min="1" max="30" step="0.5" value="3"></div>
+          <div id="scVideo" class="hidden">
+            <div class="two">
+              <div class="field"><label for="scStart">시작 지점(초)</label><input id="scStart" type="number" min="0" step="0.5"></div>
+              <div class="field"><label for="scEnd">끝 지점(초)</label><input id="scEnd" type="number" min="0" step="0.5"></div>
+            </div>
+            <button id="scFull" class="btn small" style="width:100%;margin-bottom:10px">이 동영상 처음부터 끝까지 쓰기</button>
+            <div class="field"><label for="scVol">원래 소리 <span id="scVolV">100%</span></label><input id="scVol" type="range" min="0" max="1.5" step="0.05" value="1"></div>
+            <p class="hint" id="scVideoInfo"></p>
+            <button id="scAuto" class="btn small" style="margin-bottom:12px">소리가 가장 활발한 구간 다시 찾기</button>
+            <div class="field"><label for="scVMotion">화면 움직임</label><select id="scVMotion"><option value="none">없음</option><option value="shake">손떨림 (생동감)</option><option value="pulse">두근두근</option></select></div>
+          </div>
+          <div id="scTransWrap" class="field"><label for="scTrans">이 장면으로 바뀔 때 전환</label>
+            <div class="row" style="gap:8px"><select id="scTrans" style="flex:1"><option value="">전체 설정 따르기</option><option value="auto">✦ 알아서</option><option value="fade">부드럽게 겹치기</option><option value="slide">옆으로 밀기</option><option value="up">위로 밀기</option><option value="whip">휙 넘기기</option><option value="zoom">확대하며</option><option value="blurzoom">흐리게 줌</option><option value="spin">빙글 돌기</option><option value="circle">동그랗게 열기</option><option value="flash">번쩍</option><option value="glitch">글리치</option><option value="shake">흔들림</option><option value="wipe">닦아내기</option><option value="dip">어두워졌다가</option><option value="none">바로 바뀌기</option></select><button id="transAll" class="btn small" title="모든 장면을 전체 설정으로">모두 전체로</button></div></div>
+          <div id="scPhoto" class="hidden">
+            <div class="field"><label for="scMotion">사진 움직임</label>
+              <select id="scMotion"><option value="auto">알아서 (번갈아)</option><option value="in">천천히 다가가기</option><option value="out">천천히 멀어지기</option><option value="left">왼쪽으로 흐르기</option><option value="right">오른쪽으로 흐르기</option><option value="up">위로 흐르기</option><option value="shake">손떨림 (생동감)</option><option value="pulse">두근두근</option><option value="none">움직임 없음</option></select></div>
+          </div>
+          <div id="scCard" class="hidden">
+            <div class="row" style="margin-bottom:12px"><input id="cC1" type="color"><input id="cC2" type="color"><span class="muted" style="font-size:13px">이 카드만 다른 색 쓰기</span></div>
+          </div>
+
+          <div id="scMedia">
+            <h3>자르기와 위치</h3>
+            <div class="field"><div class="lab">화면에 맞추기</div>
+              <div class="seg" id="scFit"><button data-v="auto">알아서</button><button data-v="cover">꽉 채우기</button><button data-v="contain">전체 보이기</button></div></div>
+            <div class="field"><label for="scZoom">확대 <span id="scZoomV">100%</span></label><input id="scZoom" type="range" min="1" max="3" step="0.02" value="1"></div>
+            <div class="two">
+              <div class="field"><label for="scPx">좌우 위치</label><input id="scPx" type="range" min="-1" max="1" step="0.02" value="0"></div>
+              <div class="field"><label for="scPy">위아래 위치</label><input id="scPy" type="range" min="-1" max="1" step="0.02" value="0"></div>
+            </div>
+            <div class="row" style="margin-bottom:6px"><button id="scRotate" class="btn small">↻ 90° 돌리기</button><button id="scFlip" class="btn small">⇋ 좌우 뒤집기</button></div>
+
+            <h3>보정</h3>
+            <label class="check"><input id="autoFix" type="checkbox" checked> 어두운 장면은 밝게, 흐린 색은 또렷하게 (자동 보정)</label>
+            <div class="two">
+              <div class="field"><label for="look">전체 느낌</label>
+                <select id="look"><option value="natural">자연스럽게</option><option value="warm">따뜻하게</option><option value="vivid">선명하게</option><option value="film">필름 감성</option><option value="pastel">파스텔</option><option value="cool">시원하게</option><option value="sepia">세피아</option><option value="mono">흑백</option><option value="none">보정 안 함</option></select></div>
+              <div class="field"><label for="scLook">이 장면만</label>
+                <select id="scLook"><option value="">전체 느낌 따르기</option><option value="natural">자연스럽게</option><option value="warm">따뜻하게</option><option value="vivid">선명하게</option><option value="film">필름 감성</option><option value="pastel">파스텔</option><option value="cool">시원하게</option><option value="sepia">세피아</option><option value="mono">흑백</option><option value="none">보정 안 함</option></select></div>
+            </div>
+            <div class="field"><label for="aBright">밝기 <span id="aBrightV">0</span></label><input id="aBright" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="field"><label for="aContrast">대비 <span id="aContrastV">0</span></label><input id="aContrast" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="field"><label for="aSat">채도 <span id="aSatV">0</span></label><input id="aSat" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="field"><label for="aWarm">색온도 (차갑게 ↔ 따뜻하게) <span id="aWarmV">0</span></label><input id="aWarm" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="field" id="aSharpWrap"><label for="aSharp">선명도 (사진) <span id="aSharpV">0</span></label><input id="aSharp" type="range" min="0" max="100" step="1" value="0"></div>
+            <div class="field"><label for="aBlur">흐리게 <span id="aBlurV">0</span></label><input id="aBlur" type="range" min="0" max="100" step="1" value="0"></div>
+            <div class="field"><label for="aVig">가장자리 어둡게 <span id="aVigV">0</span></label><input id="aVig" type="range" min="0" max="100" step="1" value="0"></div>
+            <div class="row"><button id="adjAll" class="btn small">모든 장면에 같은 보정</button><button id="adjReset" class="btn small">처음으로</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 글자 -->
+      <div class="pane hidden" data-p="text">
+        <div class="empty" id="txEmpty">장면을 고르면 그 장면에 글자를 넣을 수 있어요.</div>
+        <div id="txWrap" class="hidden">
+          <div class="chips" id="txList"></div>
+          <div class="row" style="margin-bottom:14px"><button id="txAdd" class="btn small primary">＋ 글자 추가</button><button id="txDel" class="btn small danger">이 글자 지우기</button></div>
+          <div id="txBody" class="hidden">
+            <div class="field"><label for="txText">내용</label><textarea id="txText" rows="3" maxlength="200"></textarea></div>
+            <p class="hint">강조할 말은 <b>*별표*</b>로 감싸면 강조색으로 나와요. 미리보기에서 글자를 끌어 옮길 수 있어요.</p>
+
+            <h3>빠른 스타일</h3>
+            <div class="chips" id="txPresets"></div>
+
+            <h3>글꼴</h3>
+            <div class="fonttabs" id="fontTabs"></div>
+            <div class="fonts" id="fontGrid"></div>
+            <div class="two">
+              <div class="field"><label for="txWeight">굵기</label><select id="txWeight"></select></div>
+              <div class="field"><label for="txSize">크기 <span id="txSizeV">64</span></label><input id="txSize" type="range" min="24" max="220" step="2" value="64"></div>
+            </div>
+
+            <h3>움직임</h3>
+            <div class="field"><label for="txAnim">나타나는 방식</label>
+              <select id="txAnim"><option value="none">움직임 없음</option><option value="fade">살며시 나타나기</option><option value="rise">아래에서 쓱 올라오기</option><option value="bounce">글자가 통통 튀기</option><option value="type">타자기처럼 찍기</option><option value="punch">쾅 하고 등장</option><option value="word">단어별로 강조</option><option value="slide">옆에서 밀려오기</option><option value="draw">선으로 그려지기</option><option value="glitch">지지직 글리치</option><option value="count">숫자 올라가기</option></select></div>
+            <div class="two">
+              <div class="field"><label for="txT0">장면 시작 뒤(초)</label><input id="txT0" type="number" min="0" step="0.1" value="0"></div>
+              <div class="field"><label for="txDur">보이는 시간(초)</label><input id="txDur" type="number" min="0" step="0.1" value="0" title="0이면 장면이 끝날 때까지"></div>
+            </div>
+            <p class="hint">보이는 시간이 0이면 장면이 끝날 때까지 떠 있어요.</p>
+
+            <h3>색과 꾸밈</h3>
+            <div class="row" style="margin-bottom:12px">
+              <input id="txColor" type="color" title="글자색"><span class="muted" style="font-size:13px">글자</span>
+              <input id="txAccent" type="color" title="강조색"><span class="muted" style="font-size:13px">강조</span>
+            </div>
+            <div class="row" style="margin-bottom:12px">
+              <label class="check" style="margin:0"><input id="txStroke" type="checkbox"> 테두리</label>
+              <input id="txStrokeColor" type="color">
+              <input id="txStrokeW" type="range" min="4" max="30" step="1" style="flex:1;min-width:90px">
+            </div>
+            <div class="two">
+              <div class="field"><label for="txShadow">그림자</label><select id="txShadow"><option value="0">없음</option><option value="1">부드러운 그림자</option><option value="2">빛나는 글자</option></select></div>
+              <div class="field"><label for="txBox">글자 뒤 배경</label><select id="txBox"><option value="none">없음</option><option value="pill">줄마다 알약</option><option value="box">둥근 상자</option><option value="band">화면 가득 띠</option><option value="marker">형광펜</option></select></div>
+            </div>
+            <div class="row" style="margin-bottom:12px"><input id="txBoxColor" type="color"><span class="muted" style="font-size:13px">배경색</span><input id="txBoxAlpha" type="range" min="0.1" max="1" step="0.05" style="flex:1;min-width:90px" title="배경 진하기"></div>
+
+            <h3>배치</h3>
+            <div class="field"><div class="lab">정렬</div><div class="seg" id="txAlign"><button data-v="left">왼쪽</button><button data-v="center">가운데</button><button data-v="right">오른쪽</button></div></div>
+            <div class="field"><div class="lab">위치</div><div class="seg" id="txPos"><button data-v="top">위</button><button data-v="mid">가운데</button><button data-v="cap">자막 자리</button><button data-v="bot">아래</button></div></div>
+            <div class="two">
+              <div class="field"><label for="txLs">자간 <span id="txLsV">0</span></label><input id="txLs" type="range" min="-8" max="30" step="1" value="0"></div>
+              <div class="field"><label for="txLh">줄 간격 <span id="txLhV">1.28</span></label><input id="txLh" type="range" min="1" max="2" step="0.02" value="1.28"></div>
+            </div>
+            <button id="txAll" class="btn small">모든 장면 자막을 이 모양으로</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 소리 -->
+      <div class="pane hidden" data-p="sound">
+        <h3>동영상 소리</h3>
+        <label class="check"><input id="origSound" type="checkbox" checked> 동영상 원래 소리 살리기</label>
+        <h3>배경음악</h3>
+        <p class="hint">아래 음악은 모두 상업적으로 써도 되는 무료 음원이에요 (CC0 · 출처 표시 없이 사용 가능).</p>
+        <div id="bgmList" class="bgmlist"><p class="hint">음악 목록을 불러오는 중…</p></div>
+        <div class="field"><label for="music">내 음악 파일 넣기 (mp3·m4a·wav)</label><input id="music" type="file" accept="audio/*"></div>
+        <p class="hint" id="musicInfo">내가 만든 음악이나 사용 허락을 받은 음원만 넣어 주세요. 유행가는 SNS에서 소리가 지워질 수 있어요.</p>
+        <div class="field"><label for="musicVol">음악 크기 <span id="musicVolV">60%</span></label><input id="musicVol" type="range" min="0" max="1" step="0.05" value="0.6"></div>
+        <label class="check"><input id="duck" type="checkbox" checked> 동영상 소리가 나올 때 음악 자동으로 줄이기</label>
+        <button id="musicClear" class="btn small hidden" style="margin-bottom:12px">음악 빼기</button>
+        <h3>효과음</h3>
+        <div class="field"><label for="sfx">장면이 바뀔 때 효과음</label><div class="row" style="gap:8px"><select id="sfx" style="flex:1"><option value="">없음</option><option value="synth">휙 (기본)</option></select><button id="sfxPrev" class="btn small">▶ 듣기</button></div></div>
+        <div class="field"><label for="sfxVol">효과음 크기 <span id="sfxVolV">70%</span></label><input id="sfxVol" type="range" min="0" max="1" step="0.05" value="0.7"></div>
+        <p class="hint">미리보기 소리와 저장되는 소리는 같은 방식으로 섞어요. 마지막 1초쯤은 음악이 자연스럽게 작아져요.</p>
+      </div>
+
+      <!-- 저장 -->
+      <div class="pane hidden" data-p="out">
+        <h3>저장 전 확인</h3>
+        <button id="qa" class="btn" style="width:100%;margin-bottom:8px">검수 시트 보기 (6장면 한눈에)</button>
+        <p class="hint">글자가 잘리거나 겹치지 않는지, 한글이 네모로 깨지지 않는지 저장 전에 한 장으로 확인해요.</p>
+        <h3>MP4로 저장</h3>
+        <div class="field"><label for="res">화질</label><select id="res"><option value="1080">고화질 1080</option><option value="720">가볍게 720</option></select></div>
+        <button id="export" class="btn primary" style="width:100%">영상 만들기</button>
+        <div id="prog" class="hidden" style="margin-top:12px"><div class="progress"><i id="bar"></i></div><p id="progText" class="muted" style="font-size:13px;margin:8px 0 0"></p>
+          <button id="cancel" class="btn small" style="margin-top:8px">그만두기</button></div>
+        <p class="hint" style="margin-top:12px">PC 크롬·엣지를 권해요. 사진만 있으면 금방 끝나고, 동영상이 많으면 영상 길이의 2~3배쯤 걸릴 수 있어요. 저장하는 동안 이 창을 닫지 마세요.</p>
+      </div>
+    </aside>
+  </div>
+
+  <div class="foot">© 2026 위드AI솔루션 · 쏭컷 AI STUDIO BETA · 대표 송민경(쏭리즈) · 문의 mkssong22@gmail.com · <a href="https://litt.ly/ssongliz" target="_blank" rel="noopener">litt.ly/ssongliz ↗</a><br>내가 만들었거나 사용 권한이 있는 사진·영상·음악만 이용해 주세요. 글꼴은 Google Fonts와 Pretendard의 공개 글꼴(SIL OFL)을 씁니다.</div>
+</main>
+
+<div id="vids" style="position:fixed;left:0;top:0;width:2px;height:2px;overflow:hidden;opacity:0;pointer-events:none" aria-hidden="true"></div>
+<div id="toast" class="toast hidden" role="status"></div>
+<div id="qaModal" class="modal hidden"><div class="box">
+  <h4>검수 시트</h4>
+  <ul id="qaList"></ul>
+  <canvas id="qaSheet"></canvas>
+  <div class="row"><button id="qaClose" class="btn small primary">닫기</button><button id="qaSave" class="btn small">이미지로 저장</button></div>
+</div></div>
+
+<script src="media.js?v=9"></script>
+<script src="studio.js?v=9"></script>
+<script type="module" src="pay.js?v=9"></script>
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}</script>
+</body>
+</html>

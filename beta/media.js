@@ -7,7 +7,7 @@
   let MP4BoxP = null;
   const loadBox = () => (MP4BoxP = MP4BoxP || import(LIB).then((m) => m.default || m));
   const cache = new WeakMap();
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const sleep = (ms) => ms > 4 ? new Promise((r) => setTimeout(r, ms)) : new Promise((r) => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); }); /* 탭이 뒤에 있어도 느려지지 않게 */
   const SMALL_FALLBACK = 700 * 1048576; /* 이보다 큰 비 MP4 파일은 통째로 풀지 않는다 */
 
   async function readU(file, pos, len) { return new Uint8Array(await file.slice(pos, pos + len).arrayBuffer()); }
