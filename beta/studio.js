@@ -618,7 +618,7 @@ async function setMusic(buf, name, lib) {
   P.music.buf = buf; P.music.name = name; P.music.lib = lib || ''; P.music.id++; P.mv.beats = []; P.mv.strong = []; P.mv.bpm = 0; P.mv.start = 0;
   $('#musicInfo').textContent = `${name} (${fmt(buf.duration)})${P.mv.on ? ' — 박자를 찾는 중…' : ' — 영상보다 짧으면 처음부터 다시 이어져요.'}`; $('#musicClear').classList.remove('hidden');
   P.mv.analyzing = true; syncMv();
-  try { const r = await analyzeBeats(buf); if (P.music.buf === buf) { P.mv.beats = r.beats; P.mv.strong = r.strong; P.mv.bpm = r.bpm; } } catch (e) { console.warn('beats', e); }
+  try { const r = await analyzeBeats(buf); if (P.music.buf === buf) { P.mv.beats = r.beats; P.mv.strong = r.strong; P.mv.bpm = r.bpm; const s0 = r.strong.find((b) => b < 4) ?? r.beats[0]; if (s0 != null && s0 < 4) P.mv.start = s0; } } catch (e) { console.warn('beats', e); }
   P.mv.analyzing = false;
   if (P.music.buf === buf) { $('#musicInfo').textContent = `${name} (${fmt(buf.duration)}) · 박자 ${P.mv.bpm || '?'} BPM`; syncMv(); changed(); }
 }
