@@ -993,7 +993,7 @@ async function loadMusicFile(f) {
 on('musicClear', 'click', () => { P.music.buf = null; P.music.name = ''; P.music.lib = ''; P.music.id++; P.mv.beats = []; $('#music').value = ''; $('#musicClear').classList.add('hidden'); $('#musicInfo').textContent = '음악을 뺐어요.'; markLib(''); syncMv(); changed(); });
 /* 내장 배경음악 · 효과음 (상업적 이용 가능, audio/LICENSES.md) */
 let LIB = { bgm: [], sfx: [] }, libAudio = null;
-function markLib(file) { $('#bgmList .bgm').forEach((x) => x.classList.toggle('on', x.dataset.f === file)); }
+function markLib(file) { $$('#bgmList .bgm').forEach((x) => x.classList.toggle('on', x.dataset.f === file)); }
 async function loadLibrary() {
   try { const r = await fetch(AUD + 'manifest.json', { cache: 'no-cache' }); if (!r.ok) throw 0; const m = await r.json(); const list = Array.isArray(m) ? m : (m.files || m.items || []);
     LIB.bgm = list.filter((x) => x.type === 'bgm'); LIB.sfx = list.filter((x) => x.type === 'sfx'); } catch (_) { LIB = { bgm: [], sfx: [] }; }
@@ -1001,8 +1001,8 @@ async function loadLibrary() {
   box.innerHTML = LIB.bgm.length ? moods.map((md) => `<div class="bgmg"><b>${md}</b>${LIB.bgm.filter((x) => x.mood === md).map((x) => `<div class="bgm" data-f="${x.file}"><button class="pv" title="미리듣기">▶</button><span>${x.titleKo}<small>${x.durationSec ? fmt(x.durationSec) : ''}</small></span><button class="use">사용</button></div>`).join('')}</div>`).join('') : '<p class="hint">기본 음악 목록을 불러오지 못했어요. 내 음악 파일은 아래에서 넣을 수 있어요.</p>';
   box.querySelectorAll('.bgm').forEach((row) => {
     const f = row.dataset.f, item = LIB.bgm.find((x) => x.file === f);
-    row.querySelector('.pv').onclick = () => { if (libAudio && libAudio._f === f && !libAudio.paused) { libAudio.pause(); row.querySelector('.pv').textContent = '▶'; return; } if (libAudio) libAudio.pause(); $('#bgmList .pv').forEach((b) => b.textContent = '▶'); libAudio = new Audio(AUD + f); libAudio._f = f; libAudio.volume = .7; libAudio.play().catch(() => {}); row.querySelector('.pv').textContent = '❚❚'; libAudio.onended = () => row.querySelector('.pv').textContent = '▶'; };
-    row.querySelector('.use').onclick = async () => { if (libAudio) { libAudio.pause(); $('#bgmList .pv').forEach((b) => b.textContent = '▶'); } $('#musicInfo').textContent = '음악을 불러오는 중…';
+    row.querySelector('.pv').onclick = () => { if (libAudio && libAudio._f === f && !libAudio.paused) { libAudio.pause(); row.querySelector('.pv').textContent = '▶'; return; } if (libAudio) libAudio.pause(); $$('#bgmList .pv').forEach((b) => b.textContent = '▶'); libAudio = new Audio(AUD + f); libAudio._f = f; libAudio.volume = .7; libAudio.play().catch(() => {}); row.querySelector('.pv').textContent = '❚❚'; libAudio.onended = () => row.querySelector('.pv').textContent = '▶'; };
+    row.querySelector('.use').onclick = async () => { if (libAudio) { libAudio.pause(); $$('#bgmList .pv').forEach((b) => b.textContent = '▶'); } $('#musicInfo').textContent = '음악을 불러오는 중…';
       try { const r = await fetch(AUD + f); const buf = await new OfflineAudioContext(2, 1, 48000).decodeAudioData(await r.arrayBuffer()); markLib(f); await setMusic(buf, item.titleKo, f); toast(`「${item.titleKo}」를 배경음악으로 넣었어요.`); }
       catch (_) { $('#musicInfo').textContent = '음악을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'; } };
   });
