@@ -554,8 +554,9 @@ function sharpen(sc) {
 
 /* ---------- 소리 섞기 (미리보기와 저장이 같은 결과를 쓴다) ---------- */
 let MIX = null;
+const AUD = (document.querySelector('meta[name="audio-base"]') || {}).content || 'audio/';
 const SFXC = new Map();
-async function loadSfx(file) { if (SFXC.has(file)) return SFXC.get(file); const job = (async () => { try { const r = await fetch('audio/' + file); if (!r.ok) return null; return await new OfflineAudioContext(2, 1, 48000).decodeAudioData(await r.arrayBuffer()); } catch (_) { return null; } })(); SFXC.set(file, job); return job; }
+async function loadSfx(file) { if (SFXC.has(file)) return SFXC.get(file); const job = (async () => { try { const r = await fetch(AUD + file); if (!r.ok) return null; return await new OfflineAudioContext(2, 1, 48000).decodeAudioData(await r.arrayBuffer()); } catch (_) { return null; } })(); SFXC.set(file, job); return job; }
 const needsAudio = (TL) => !!(P.music.buf || P.sfx && TL.items.length > 1 || P.origSound && TL.items.some((it) => it.sc.kind === 'video' && it.sc.abuf && it.sc.vol > 0));
 async function mixAudio(TL) {
   const sig = JSON.stringify([TL.items.map((it) => [it.sc.id, +it.t0.toFixed(3), +it.dur.toFixed(3), it.sc.start || 0, it.sc.vol, it.tr]), P.origSound, P.music.id, P.music.vol, P.music.duck, P.sfx, P.sfxVol, P.transition, TL.mv ? P.mv.start : -1]);
@@ -998,14 +999,14 @@ async function loadLibrary() {
   box.innerHTML = LIB.bgm.length ? moods.map((md) => `<div class="bgmg"><b>${md}</b>${LIB.bgm.filter((x) => x.mood === md).map((x) => `<div class="bgm" data-f="${x.file}"><button class="pv" title="미리듣기">▶</button><span>${x.titleKo}<small>${x.durationSec ? fmt(x.durationSec) : ''}</small></span><button class="use">사용</button></div>`).join('')}</div>`).join('') : '<p class="hint">기본 음악 목록을 불러오지 못했어요. 내 음악 파일은 아래에서 넣을 수 있어요.</p>';
   box.querySelectorAll('.bgm').forEach((row) => {
     const f = row.dataset.f, item = LIB.bgm.find((x) => x.file === f);
-    row.querySelector('.pv').onclick = () => { if (libAudio && libAudio._f === f && !libAudio.paused) { libAudio.pause(); row.querySelector('.pv').textContent = '▶'; return; } if (libAudio) libAudio.pause(); $('#bgmList .pv').forEach((b) => b.textContent = '▶'); libAudio = new Audio('audio/' + f); libAudio._f = f; libAudio.volume = .7; libAudio.play().catch(() => {}); row.querySelector('.pv').textContent = '❚❚'; libAudio.onended = () => row.querySelector('.pv').textContent = '▶'; };
+    row.querySelector('.pv').onclick = () => { if (libAudio && libAudio._f === f && !libAudio.paused) { libAudio.pause(); row.querySelector('.pv').textContent = '▶'; return; } if (libAudio) libAudio.pause(); $('#bgmList .pv').forEach((b) => b.textContent = '▶'); libAudio = new Audio(AUD + f); libAudio._f = f; libAudio.volume = .7; libAudio.play().catch(() => {}); row.querySelector('.pv').textContent = '❚❚'; libAudio.onended = () => row.querySelector('.pv').textContent = '▶'; };
     row.querySelector('.use').onclick = async () => { if (libAudio) { libAudio.pause(); $('#bgmList .pv').forEach((b) => b.textContent = '▶'); } $('#musicInfo').textContent = '음악을 불러오는 중…';
-      try { const r = await fetch('audio/' + f); const buf = await new OfflineAudioContext(2, 1, 48000).decodeAudioData(await r.arrayBuffer()); markLib(f); await setMusic(buf, item.titleKo, f); toast(`「${item.titleKo}」를 배경음악으로 넣었어요.`); }
+      try { const r = await fetch(AUD + f); const buf = await new OfflineAudioContext(2, 1, 48000).decodeAudioData(await r.arrayBuffer()); markLib(f); await setMusic(buf, item.titleKo, f); toast(`「${item.titleKo}」를 배경음악으로 넣었어요.`); }
       catch (_) { $('#musicInfo').textContent = '음악을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'; } };
   });
   const sel = $('#sfx'); sel.innerHTML = '<option value="">없음</option><option value="synth">휙 (기본)</option>' + LIB.sfx.map((x) => `<option value="${x.file}">${x.titleKo}</option>`).join(''); setVal('sfx', P.sfx);
 }
-on('sfxPrev', 'click', async () => { if (!P.sfx) return toast('효과음을 먼저 골라 주세요.'); if (P.sfx === 'synth') return toast('휙 소리는 미리보기에서 들을 수 있어요.'); const a = new Audio('audio/' + P.sfx); a.volume = P.sfxVol; a.play().catch(() => {}); });
+on('sfxPrev', 'click', async () => { if (!P.sfx) return toast('효과음을 먼저 골라 주세요.'); if (P.sfx === 'synth') return toast('휙 소리는 미리보기에서 들을 수 있어요.'); const a = new Audio(AUD + P.sfx); a.volume = P.sfxVol; a.play().catch(() => {}); });
 on('sfxVol', 'input', (e) => { P.sfxVol = +e.target.value; $('#sfxVolV').textContent = Math.round(P.sfxVol * 100) + '%'; });
 /* 뮤직비디오 */
 on('mvOn', 'change', async (e) => { P.mv.on = e.target.checked; if (P.mv.on && P.music.buf && !P.mv.beats.length && !P.mv.analyzing) await setMusic(P.music.buf, P.music.name, P.music.lib); syncMv(); syncScene(); changed(); });
